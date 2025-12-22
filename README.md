@@ -18,6 +18,7 @@ Meanwhile, the compiled output files will be generated in the `bin` folder by de
 The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
 
 
+```
 POS-Project/
 │
 ├── src/
@@ -59,3 +60,4 @@ POS-Project/
 │
 ├── README.txt
 └── run.bat  (or run.sh for Linux/Mac)   // Optional: script to run the app
+```
