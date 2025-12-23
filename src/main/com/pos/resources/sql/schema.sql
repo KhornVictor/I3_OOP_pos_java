@@ -31,3 +31,11 @@ CREATE TABLE IF NOT EXISTS customers (
     email VARCHAR(100) UNIQUE,
     phone VARCHAR(15)
 );
+
+CREATE TABLE IF NOT EXISTS suppliers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_name VARCHAR(100),
+    phone VARCHAR(15),
+    email VARCHAR(100) UNIQUE
+);
