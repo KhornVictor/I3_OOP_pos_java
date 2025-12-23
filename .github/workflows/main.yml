@@ -12,10 +12,13 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            *🚀 New Activity in ${{ github.repository }}*
+            ${{ github.event_name == 'push' && '🚀 **NEW PUSH**' || ' git   **PULL REQUEST**' }}
             
-            👤 **User:** ${{ github.actor }}
-            📢 **Event:** ${{ github.event_name }}
-            📝 **Message:** ${{ github.event.head_commit.message || 'PR Activity' }}
+            👤 **By:** ${{ github.actor }}
+            📂 **Repo:** ${{ github.repository }}
             
-            🔗 [View on GitHub](https://github.com/${{ github.repository }})
+            ${{ github.event_name == 'push' 
+                && format('📝 **Commit:** {0}', github.event.head_commit.message) 
+                || format('📝 **PR Title:** {0}', github.event.pull_request.title) }}
+            
+            🔗 [View Details](${{ github.event_name == 'push' && github.event.compare || github.event.pull_request.html_url }})
