@@ -12,38 +12,42 @@ POS-System/
 │   │   ├── java/
 │   │   │   └── com/
 │   │   │       └── pos/
-│   │   │
+│   │   │           │
 │   │   │           ├── Main.java
-│   │   │
+│   │   │           │
+│   │   │           ├── component
+│   │   │           │   ├── layout
+│   │   │           │   └── component
+│   │   │           │
 │   │   │           ├── config/
 │   │   │           │   └── DatabaseConfig.java
-│   │   │
+│   │   │           │
 │   │   │           ├── db/
 │   │   │           │   ├── DBConnection.java
 │   │   │           │   └── DBInitializer.java
-│   │   │
+│   │   │           │
 │   │   │           ├── model/
 │   │   │           │   ├── Product.java
 │   │   │           │   ├── User.java
 │   │   │           │   ├── Order.java
 │   │   │           │   └── OrderItem.java
-│   │   │
+│   │   │           │
 │   │   │           ├── dao/
 │   │   │           │   ├── ProductDAO.java
 │   │   │           │   ├── UserDAO.java
 │   │   │           │   ├── OrderDAO.java
 │   │   │           │   └── ReportDAO.java
-│   │   │
+│   │   │           │
 │   │   │           ├── service/
 │   │   │           │   ├── ProductService.java
 │   │   │           │   ├── AuthService.java
 │   │   │           │   └── OrderService.java
-│   │   │
+│   │   │           │
 │   │   │           ├── controller/
 │   │   │           │   ├── LoginController.java
 │   │   │           │   ├── POSController.java
 │   │   │           │   └── ProductController.java
-│   │   │
+│   │   │           │
 │   │   │           ├── view/
 │   │   │           │   ├── login/
 │   │   │           │   │   └── LoginFrame.java
@@ -60,12 +64,12 @@ POS-System/
 │   │   │           │   │
 │   │   │           │   └── report/
 │   │   │           │       └── SalesReportFrame.java
-│   │   │
+│   │   │           │
 │   │   │           ├── util/
 │   │   │           │   ├── DateUtil.java
 │   │   │           │   ├── CurrencyUtil.java
 │   │   │           │   └── ValidationUtil.java
-│   │   │
+│   │   │           │
 │   │   │           └── exception/
 │   │   │               └── DataAccessException.java
 │   │   │
