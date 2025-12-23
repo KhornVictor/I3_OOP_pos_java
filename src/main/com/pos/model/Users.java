@@ -9,10 +9,10 @@ public class Users {
     public Users() {}
 
     public Users(int id, String username, String password, String role) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.role = role;
+        this.id = id;                               // primary key
+        this.username = username;                   // unique
+        this.password = password;                   // hashed password
+        this.role = role;                           // e.g., "admin", "cashier"
     }
 
     public int getId() { return id; }
