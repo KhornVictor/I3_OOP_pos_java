@@ -1,16 +1,17 @@
 package main.com.pos.service;
+import main.com.pos.dao.UserDAO;
+import main.com.pos.model.Users;
 
 public class AuthService {
-	private static final String DEFAULT_USERNAME = "admin";
-	private static final String DEFAULT_PASSWORD = "password123";
-	
 
 	public boolean authenticate(String username, String password) {
+		Users authorziedUser = new UserDAO().authenticate(username, password);
 		if (username == null || password == null) {
 			System.out.println("⚠️ Username or password cannot be null");
 			return false;
 		}
 		String trimmedUser = username.trim();
-		return DEFAULT_USERNAME.equalsIgnoreCase(trimmedUser) && DEFAULT_PASSWORD.equals(password);
+		String trimmedPass = password.trim();
+		return authorziedUser != null && authorziedUser.getUsername().equals(trimmedUser) && authorziedUser.getPassword().equals(trimmedPass);
 	}
 }

@@ -21,7 +21,7 @@ public class UserDAO {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 	            if (resultSet.next()) return mapRow(resultSet);
 			}
-		} catch (SQLException e) { System.out.println("❌ getById error: " + e.getMessage()); }
+		} catch (SQLException error) { System.out.println("❌ getById error: " + error.getMessage()); }
 		return null;
 	}
 
@@ -33,7 +33,7 @@ public class UserDAO {
         ) {
 			preparedStatement.setString(1, username);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) { if (resultSet.next()) return mapRow(resultSet); }
-		} catch (SQLException e) { System.out.println("❌ getByUsername error: " + e.getMessage()); }
+		} catch (SQLException error) { System.out.println("❌ getByUsername error: " + error.getMessage()); }
 		return null;
 	}
 
@@ -48,9 +48,7 @@ public class UserDAO {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) return mapRow(resultSet);
 			}
-		} catch (SQLException e) {
-			System.out.println("❌ authenticate error: " + e.getMessage());
-		}
+		} catch (SQLException error) { System.out.println("❌ authenticate error: " + error.getMessage()); }
 		return null;
 	}
 
@@ -61,9 +59,7 @@ public class UserDAO {
 			 PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			 ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) result.add(mapRow(resultSet));
-		} catch (SQLException e) {
-			System.out.println("❌ getAll error: " + e.getMessage());
-		}
+		} catch (SQLException error) { System.out.println("❌ getAll error: " + error.getMessage()); }
 		return result;
 	}
 
@@ -75,8 +71,8 @@ public class UserDAO {
 			preparedStatement.setString(2, user.getPassword());
 			preparedStatement.setString(3, user.getRole());
 			return preparedStatement.executeUpdate() > 0;
-		} catch (SQLException e) {
-			System.out.println("❌ insert error: " + e.getMessage());
+		} catch (SQLException error) {
+			System.out.println("❌ insert error: " + error.getMessage());
 			return false;
 		}
 	}
@@ -90,8 +86,8 @@ public class UserDAO {
 			preparedStatement.setString(3, user.getRole());
 			preparedStatement.setInt(4, user.getId());
 			return preparedStatement.executeUpdate() > 0;
-		} catch (SQLException e) {
-			System.out.println("❌ update error: " + e.getMessage());
+		} catch (SQLException error) {
+			System.out.println("❌ update error: " + error.getMessage());
 			return false;
 		}
 	}
@@ -102,18 +98,18 @@ public class UserDAO {
 			 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.setInt(1, id);
 			return preparedStatement.executeUpdate() > 0;
-		} catch (SQLException e) {
-			System.out.println("❌ delete error: " + e.getMessage());
+		} catch (SQLException error) {
+			System.out.println("❌ delete error: " + error.getMessage());
 			return false;
 		}
 	}
 
-	private Users mapRow(ResultSet rs) throws SQLException {
+	private Users mapRow(ResultSet resultSet) throws SQLException {
 		Users users = new Users();
-		users.setId(rs.getInt("id"));
-		users.setUsername(rs.getString("username"));
-		users.setPassword(rs.getString("password"));
-		users.setRole(rs.getString("role"));
+		users.setId(resultSet.getInt("id"));
+		users.setUsername(resultSet.getString("username"));
+		users.setPassword(resultSet.getString("password"));
+		users.setRole(resultSet.getString("role"));
 		return users;
 	}
 }
