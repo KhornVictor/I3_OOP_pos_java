@@ -1,21 +1,21 @@
 name: Telegram Notification
-
-on:
-  push:        # triggers on push to any branch
+on: [push, pull_request]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Send Telegram Message
+      - name: Send Message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
           message: |
-            🚀 Event: ${{ github.event_name }}
-            👤 Actor: ${{ github.actor }}
-            🌿 Branch: ${{ github.ref_name }}
-            🏷 Repository: ${{ github.repository }}
-            🔗 Branch Link: https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}
+            *🚀 New Activity in ${{ github.repository }}*
+            
+            👤 **User:** ${{ github.actor }}
+            📢 **Event:** ${{ github.event_name }}
+            📝 **Message:** ${{ github.event.head_commit.message || 'PR Activity' }}
+            
+            🔗 [View on GitHub](https://github.com/${{ github.repository }})
