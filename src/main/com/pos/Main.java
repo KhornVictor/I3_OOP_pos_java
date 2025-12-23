@@ -1,4 +1,4 @@
-package main.com.pos.app;
+package main.com.pos;
 import java.sql.SQLException;
 import main.com.pos.database.DBConnection;
 import main.com.pos.view.LoginFrame;

@@ -88,7 +88,7 @@ public class LoginFrame extends JFrame {
         setContentPane(mainPanel);
     }
 
-    private void loginAction(ActionEvent e) {
+    private void loginAction(ActionEvent event) {
         String username = usernameField.getText().trim();
         String password = new String(passwordField.getPassword()).trim();
         

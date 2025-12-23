@@ -1,63 +1,124 @@
-## Getting Started
+# POS-System
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+A Point of Sale (POS) System developed in Java using Object-Oriented Programming principles.
 
 ## Folder Structure
 
-The workspace contains two folders by default, where:
+```
+POS-System/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── pos/
+│   │   │
+│   │   │           ├── Main.java
+│   │   │
+│   │   │           ├── config/
+│   │   │           │   └── DatabaseConfig.java
+│   │   │
+│   │   │           ├── db/
+│   │   │           │   ├── DBConnection.java
+│   │   │           │   └── DBInitializer.java
+│   │   │
+│   │   │           ├── model/
+│   │   │           │   ├── Product.java
+│   │   │           │   ├── User.java
+│   │   │           │   ├── Order.java
+│   │   │           │   └── OrderItem.java
+│   │   │
+│   │   │           ├── dao/
+│   │   │           │   ├── ProductDAO.java
+│   │   │           │   ├── UserDAO.java
+│   │   │           │   ├── OrderDAO.java
+│   │   │           │   └── ReportDAO.java
+│   │   │
+│   │   │           ├── service/
+│   │   │           │   ├── ProductService.java
+│   │   │           │   ├── AuthService.java
+│   │   │           │   └── OrderService.java
+│   │   │
+│   │   │           ├── controller/
+│   │   │           │   ├── LoginController.java
+│   │   │           │   ├── POSController.java
+│   │   │           │   └── ProductController.java
+│   │   │
+│   │   │           ├── view/
+│   │   │           │   ├── login/
+│   │   │           │   │   └── LoginFrame.java
+│   │   │           │   │
+│   │   │           │   ├── dashboard/
+│   │   │           │   │   └── DashboardFrame.java
+│   │   │           │   │
+│   │   │           │   ├── pos/
+│   │   │           │   │   ├── POSFrame.java
+│   │   │           │   │   └── CartPanel.java
+│   │   │           │   │
+│   │   │           │   ├── product/
+│   │   │           │   │   └── ProductManagementFrame.java
+│   │   │           │   │
+│   │   │           │   └── report/
+│   │   │           │       └── SalesReportFrame.java
+│   │   │
+│   │   │           ├── util/
+│   │   │           │   ├── DateUtil.java
+│   │   │           │   ├── CurrencyUtil.java
+│   │   │           │   └── ValidationUtil.java
+│   │   │
+│   │   │           └── exception/
+│   │   │               └── DataAccessException.java
+│   │   │
+│   │   └── resources/
+│   │       ├── images/
+│   │       │   └── logo.png
+│   │       ├── sql/
+│   │       │   └── schema.sql
+│   │       └── config.properties
+│   │
+│   └── test/
+│       └── java/
+│           └── com/pos/
+│               └── ProductDAOTest.java
+│
+├── lib/
+│   └── mysql-connector-j.jar
+│
+├── bin/
+│   ├── main/
+│   │   └── com/pos/...
+│   │
+│   └── test/
+│       └── java/com/pos/...
+│
+├── README.md
+└── .gitignore
+```
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+## Project Structure Overview
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+### Core Packages
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+- **config/**: Database and application configuration management
+- **db/**: Database connection and initialization logic
+- **model/**: Entity classes (Product, User, Order, OrderItem)
+- **dao/**: Data Access Objects for database CRUD operations
+- **service/**: Business logic layer
+- **controller/**: Application controllers handling user interactions
+- **view/**: User Interface components organized by feature
+- **util/**: Utility classes for common operations
+- **exception/**: Custom exception classes
 
-## Dependency Management
+## Getting Started
+
+1. Ensure you have Java installed on your system
+2. Download MySQL connector JAR and place it in the `lib/` folder
+3. Set up the database using the schema provided in `src/main/resources/sql/schema.sql`
+4. Configure database connection in `src/main/resources/config.properties`
+5. Compile and run `Main.java` to start the application
+
+## Dependencies
 
 The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
 
-
-```
-POS-Project/
-│
-├── src/
-│   └── com/
-│       └── pos/
-│           ├── Main.java                 // Entry point
-│           │
-│           ├── model/
-│           │   ├── Product.java
-│           │   ├── Sale.java
-│           │   └── Customer.java
-│           │
-│           ├── view/
-│           │   ├── LoginFrame.java
-│           │   ├── MainDashboard.java
-│           │   ├── ProductPanel.java
-│           │   └── SaleFrame.java
-│           │
-│           ├── controller/
-│           │   ├── ProductController.java
-│           │   └── SaleController.java
-│           │
-│           └── database/
-│               ├── DBConnection.java      // Handles database connection
-│               ├── ProductDAO.java
-│               └── SaleDAO.java
-│
-├── lib/
-│   └── mysql-connector-java-8.0.xx.jar   // Your JDBC driver (download & place here)
-│
-├── resources/
-│   ├── db.properties                     // Store DB URL, username, password
-│   └── icons/                            // Optional: images for buttons, etc.
-│       ├── logo.png
-│       └── cart.png
-│
-├── sql/
-│   └── pos_schema.sql                    // Your database creation script
-│
-├── README.txt
-└── run.bat  (or run.sh for Linux/Mac)   // Optional: script to run the app
-```
+- **MySQL Connector J** (JDBC Driver) - for database connectivity
