@@ -127,9 +127,33 @@ The `JAVA PROJECTS` view allows you to manage your dependencies. More details ca
 
 - **MySQL Connector J** (JDBC Driver) - for database connectivity
 
-
-
 ## POS System Data Flow
+
+1. **User Interface Layer**
+   - The user interacts with the POS system (e.g., scanning a product, entering payment).
+   
+2. **Controller Layer**
+   - Receives the user input and processes the request.
+   - Validates input and determines the appropriate action.
+
+3. **Service Layer**
+   - Contains business logic.
+   - The controller calls the service layer to perform operations like processing a sale, applying discounts, etc.
+
+4. **Data Access Object (DAO) Layer**
+   - The service layer calls the DAO to interact with the database.
+   - The DAO handles data retrieval and updates using SQL queries or ORM tools.
+
+5. **Database**
+   - The database stores all the data (e.g., product information, user details, transactions).
+
+6. **Data Return Flow**
+   - After the DAO fetches or updates data, it maps the data back to model objects.
+   - The service layer returns the processed data to the controller.
+   - The controller then sends the response back to the user interface.
+
+## Diagram Overview
+
 
 ```
 User Interface Layer  
