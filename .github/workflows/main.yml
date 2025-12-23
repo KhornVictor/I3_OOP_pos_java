@@ -1,21 +1,21 @@
 name: Telegram Notification
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   notify:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Send Message
+      - name: Send Telegram Message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            🚀 Action: ${{ github.event_name }}
-            👤 By: ${{ github.actor }}
-            📝 Message: ${{ 
-              github.event_name == 'push' && github.event.commits[0].message 
-              || github.event.pull_request.title 
-            }}
-            🔗 Link: https://github.com/KhornVictor/I3_OOP_pos_java
+            🚀 Event: ${{ github.event_name }}
+            👤 Actor: ${{ github.actor }}
+            🏷 Repository: ${{ github.repository }}
+            🔗 Link: https://github.com/${{ github.repository }}
