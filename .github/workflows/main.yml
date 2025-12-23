@@ -14,11 +14,11 @@ jobs:
           message: |
             ${{ github.event_name == 'push' && '🚀 **NEW PUSH**' || ' git   **PULL REQUEST**' }}
             
-            👤 **By:** ${{ github.actor }}
-            📂 **Repo:** ${{ github.repository }}
+            👤 By: ${{ github.actor }}
+            📂 Repo: ${{ github.repository }}
             
             ${{ github.event_name == 'push' 
-                && format('📝 **Commit:** {0}', github.event.head_commit.message) 
-                || format('📝 **PR Title:** {0}', github.event.pull_request.title) }}
+                && format('📝 Commit: {0}', github.event.head_commit.message) 
+                || format('📝 PR Title: {0}', github.event.pull_request.title) }}
             
             🔗 [View Details](${{ github.event_name == 'push' && github.event.compare || github.event.pull_request.html_url }})
