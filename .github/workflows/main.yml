@@ -1,64 +1,28 @@
-name: Java CI/CD
+name: Notify Telegram on Push/Pull
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request: 
-    branches: [ main, develop ]
-  workflow_dispatch:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
-jobs: 
-  build:
+jobs:
+  telegram-notify:
     runs-on: ubuntu-latest
-    
     steps:
-      - name:  Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-      
-      - name:  Compile Java files
+      - name: Send Telegram notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          mkdir -p bin
-          find src/main -name "*.java" -print0 | xargs -0 javac -d bin -cp "lib/*"
-      
-      - name: Run tests
-        run: |
-          if [ -d "src/test" ] && [ "$(find src/test -name '*.java' | wc -l)" -gt 0 ]; then
-            find src/test -name "*.java" -print0 | xargs -0 javac -d bin -cp "bin: lib/*"
-            echo "Tests compiled successfully"
-          else
-            echo "No tests found, skipping test execution"
-          fi
-      
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-classes
-          path: bin/
-          retention-days: 7
-
-  notify:
-    needs: build
-    runs-on:  ubuntu-latest
-    if: always()
-    
-    steps:
-      - name:  Send Telegram Notification
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets. TELEGRAM_TOKEN }}
-          format:  markdown
-          message: |
-            🔔 Build ${{ needs.build.result == 'success' && '✅ SUCCESS' || '❌ FAILED' }}
-            
-            👤 Actor: ${{ github. actor }}
-            📂 Repository: ${{ github.repository }}
-            📦 Event: ${{ github.event_name }}
-            🔗 Run:  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENT_TYPE="${{ github.event_name }}"
+          REPO_NAME="${{ github.repository }}"
+          BRANCH_NAME="${{ github.ref_name }}"
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          MESSAGE="📢 GitHub Event: $EVENT_TYPE\nRepository: $REPO_NAME\nBranch: $BRANCH_NAME\nMessage: $COMMIT_MESSAGE"
+          
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="$MESSAGE"
