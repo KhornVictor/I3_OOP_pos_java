@@ -13,4 +13,7 @@ jobs:
           message: |
             🚀 Action: ${{ github.event_name }}
             👤 By: ${{ github.actor }}
-            📝 Message: ${{ github.event.commits[0].message || 'New PR activity' }}
+            📝 Message: ${{ 
+              github.event_name == 'push' && github.event.commits[0].message 
+              || github.event.pull_request.title 
+            }}
