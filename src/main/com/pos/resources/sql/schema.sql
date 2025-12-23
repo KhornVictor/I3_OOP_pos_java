@@ -39,3 +39,13 @@ CREATE TABLE IF NOT EXISTS suppliers (
     phone VARCHAR(15),
     email VARCHAR(100) UNIQUE
 );
+
+CREATE TABLE IF NOT EXISTS purchases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
