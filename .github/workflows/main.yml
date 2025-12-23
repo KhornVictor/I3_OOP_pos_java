@@ -21,4 +21,12 @@ jobs:
           REPO_NAME="${{ github.repository }}"
           BRANCH_NAME="${{ github.ref_name }}"
           COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          MESSAGE="📢 GitHub Event: $EVENT_TYPE\nRepository: $REPO_NAME\nBranch: $BRANCH_NAME\nMessage: $COMMIT_MESSAGE"
+
+          MESSAGE="📢 GitHub Event: $EVENT_TYPE
+          Repository: $REPO_NAME
+          Branch: $BRANCH_NAME
+          Message: $COMMIT_MESSAGE"
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="$MESSAGE"
