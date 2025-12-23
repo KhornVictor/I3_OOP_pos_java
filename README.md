@@ -1,7 +1,6 @@
 # POS-System
 
-A Point of Sale (POS) System developed in Java using Object-Oriented Programming principles. sdfsdfsdfeufgiuwefgiuwebfiuewfdgdfgrf
-
+A Point of Sale (POS) System developed in Java using Object-Oriented Programming principles.
 ## Folder Structure
 
 ```
