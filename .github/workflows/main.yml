@@ -12,10 +12,8 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            *🔔 GitHub Notification*
+            🔔 GitHub Notification
             
-            👤 **Actor:** ${{ github.actor }}
-            📂 **Repository:** ${{ github.repository }}
-            📦 **Event:** ${{ github.event_name }}
-            
-            🔗 [View Activity](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+            👤 Actor: ${{ github.actor }}
+            📂 Repository: ${{ github.repository }}
+            📦 Event: ${{ github.event_name }}
