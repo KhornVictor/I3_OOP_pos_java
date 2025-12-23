@@ -1,8 +1,7 @@
 name: Telegram Notification
 
 on:
-  push:
-  pull_request:
+  push:        # triggers on push to any branch
 
 jobs:
   notify:
