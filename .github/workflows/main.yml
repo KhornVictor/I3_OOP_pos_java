@@ -17,5 +17,6 @@ jobs:
           message: |
             🚀 Event: ${{ github.event_name }}
             👤 Actor: ${{ github.actor }}
+            🌿 Branch: ${{ github.ref_name }}
             🏷 Repository: ${{ github.repository }}
-            🔗 Link: https://github.com/${{ github.repository }}
+            🔗 Branch Link: https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}
