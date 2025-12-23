@@ -12,12 +12,14 @@ public class DBInitializer {
             Statement statement = connection.createStatement();
 
             String userTable = """
-                CREATE TABLE IF NOT EXISTS users (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    password VARCHAR(255) NOT NULL,
-                    role VARCHAR(20) NOT NULL
-                );
+                CREATE TABLE IF NOT EXISTS User (
+                    UserID INT AUTO_INCREMENT PRIMARY KEY,
+                    Username VARCHAR(50) NOT NULL UNIQUE,
+                    Password VARCHAR(255) NOT NULL,
+                    Role VARCHAR(20) NOT NULL,
+                    Name VARCHAR(100),
+                    Email VARCHAR(100)
+                ) ENGINE=InnoDB;
             """;
             statement.execute(userTable);
             System.out.println("🍀 Database initialized successfully.");

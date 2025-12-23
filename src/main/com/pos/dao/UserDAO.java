@@ -7,12 +7,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import main.com.pos.database.DBConnection;
-import main.com.pos.model.Users;
+import main.com.pos.model.User;
 
 public class UserDAO {
 
-	public Users getById(int id) {
-		String sql = "SELECT id, username, password, role FROM users WHERE id = ?";
+	public User getById(int id) {
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User WHERE UserID = ?";
 		try (
             Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(sql)
@@ -25,8 +25,8 @@ public class UserDAO {
 		return null;
 	}
 
-	public Users getByUsername(String username) {
-		String sql = "SELECT id, username, password, role FROM users WHERE username = ?";
+	public User getByUsername(String username) {
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User WHERE Username = ?";
 		try (
             Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(sql)
@@ -37,14 +37,14 @@ public class UserDAO {
 		return null;
 	}
 
-	public Users authenticate(String username, String password) {
-		String sql = "SELECT id, username, password, role FROM users WHERE username = ? AND password = ?";
+	public User authenticate(User user) {
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User WHERE Username = ? AND Password = ?";
 		try (
             Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(sql)
         ) {
-			preparedStatement.setString(1, username);
-			preparedStatement.setString(2, password);
+			preparedStatement.setString(1, user.getUsername());
+			preparedStatement.setString(2, user.getPassword());
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) return mapRow(resultSet);
 			}
@@ -52,9 +52,9 @@ public class UserDAO {
 		return null;
 	}
 
-	public List<Users> getAll() {
-		String sql = "SELECT id, username, password, role FROM users ORDER BY id";
-		List<Users> result = new ArrayList<>();
+	public List<User> getAll() {
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User ORDER BY UserID";
+		List<User> result = new ArrayList<>();
 		try (Connection connection = DBConnection.getConnection();
 			 PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			 ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -63,53 +63,14 @@ public class UserDAO {
 		return result;
 	}
 
-	public boolean insert(Users user) {
-		String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-		try (Connection connection = DBConnection.getConnection();
-			 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-			preparedStatement.setString(1, user.getUsername());
-			preparedStatement.setString(2, user.getPassword());
-			preparedStatement.setString(3, user.getRole());
-			return preparedStatement.executeUpdate() > 0;
-		} catch (SQLException error) {
-			System.out.println("❌ insert error: " + error.getMessage());
-			return false;
-		}
-	}
-
-	public boolean update(Users user) {
-		String sql = "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?";
-		try (Connection connection = DBConnection.getConnection();
-			 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-			preparedStatement.setString(1, user.getUsername());
-			preparedStatement.setString(2, user.getPassword());
-			preparedStatement.setString(3, user.getRole());
-			preparedStatement.setInt(4, user.getId());
-			return preparedStatement.executeUpdate() > 0;
-		} catch (SQLException error) {
-			System.out.println("❌ update error: " + error.getMessage());
-			return false;
-		}
-	}
-
-	public boolean delete(int id) {
-		String sql = "DELETE FROM users WHERE id = ?";
-		try (Connection connection = DBConnection.getConnection();
-			 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-			preparedStatement.setInt(1, id);
-			return preparedStatement.executeUpdate() > 0;
-		} catch (SQLException error) {
-			System.out.println("❌ delete error: " + error.getMessage());
-			return false;
-		}
-	}
-
-	private Users mapRow(ResultSet resultSet) throws SQLException {
-		Users users = new Users();
-		users.setId(resultSet.getInt("id"));
-		users.setUsername(resultSet.getString("username"));
-		users.setPassword(resultSet.getString("password"));
-		users.setRole(resultSet.getString("role"));
-		return users;
+	private User mapRow(ResultSet resultSet) throws SQLException {
+		User user = new User();
+		user.setId(resultSet.getInt("UserID"));
+		user.setUsername(resultSet.getString("Username"));
+		user.setPassword(resultSet.getString("Password"));
+		user.setRole(resultSet.getString("Role"));
+		user.setName(resultSet.getString("Name"));
+		user.setEmail(resultSet.getString("Email"));
+		return user;
 	}
 }

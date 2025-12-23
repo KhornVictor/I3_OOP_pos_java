@@ -1,5 +1,6 @@
 package main.com.pos.controller;
 
+import main.com.pos.model.User;
 import main.com.pos.service.AuthService;
 
 public class LoginController {
@@ -9,7 +10,7 @@ public class LoginController {
 		this.authService = authService;
 	}
 
-	public boolean login(String username, String password) {
-		return authService.authenticate(username, password);
+	public User login(User user) {
+		return authService.authenticate(user);
 	}
 }

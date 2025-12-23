@@ -1,16 +1,22 @@
 package main.com.pos.service;
 import main.com.pos.dao.UserDAO;
-import main.com.pos.model.Users;
+import main.com.pos.model.User;
 
 public class AuthService {
-	public boolean authenticate(String username, String password) {
-		Users authorziedUser = new UserDAO().authenticate(username, password);
-		if (username == null || password == null) {
+	public User authenticate(User user) {
+		User authorizedUser = new UserDAO().authenticate(user);
+		if (user.getUsername() == null || user.getPassword() == null) {
 			System.out.println("⚠️ Username or password cannot be null");
-			return false;
+			return null;
 		}
-		String trimmedUser = username.trim();
-		String trimmedPass = password.trim();
-		return authorziedUser != null && authorziedUser.getUsername().equals(trimmedUser) && authorziedUser.getPassword().equals(trimmedPass);
+		String trimmedUser = user.getUsername().trim();
+		String trimmedPass = user.getPassword().trim();
+		if (authorizedUser != null && authorizedUser.getUsername().equals(trimmedUser) && authorizedUser.getPassword().equals(trimmedPass)) {
+			System.out.println("✅ Authentication successful for user: " + trimmedUser);
+			return authorizedUser;
+		} else {
+			System.out.println("❌ Authentication failed for user: " + trimmedUser);
+			return null;
+		}
 	}
 }

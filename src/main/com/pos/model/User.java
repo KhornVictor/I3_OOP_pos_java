@@ -1,18 +1,27 @@
 package main.com.pos.model;
 
-public class Users {
+public class User {
     private int id;
     private String username;
     private String password;
     private String role;
+    private String name;
+    private String email;
 
-    public Users() {}
+    public User() {}
 
-    public Users(int id, String username, String password, String role) {
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public User(int id, String username, String password, String role, String name, String email) {
         this.id = id;                               // primary key
         this.username = username;                   // unique
         this.password = password;                   // hashed password
         this.role = role;                           // e.g., "admin", "cashier"
+        this.name = name;
+        this.email = email;
     }
 
     public int getId() { return id; }
@@ -26,4 +35,10 @@ public class Users {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }
