@@ -5,20 +5,17 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Message
+      - name: Send Telegram Message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: markdown
           message: |
-            ${{ github.event_name == 'push' && '🚀 **NEW PUSH**' || ' git   **PULL REQUEST**' }}
+            *🔔 GitHub Notification*
             
-            👤 By: ${{ github.actor }}
-            📂 Repo: ${{ github.repository }}
+            👤 **Actor:** ${{ github.actor }}
+            📂 **Repository:** ${{ github.repository }}
+            📦 **Event:** ${{ github.event_name }}
             
-            ${{ github.event_name == 'push' 
-                && format('📝 Commit: {0}', github.event.head_commit.message) 
-                || format('📝 PR Title: {0}', github.event.pull_request.title) }}
-            
-            🔗 [View Details](${{ github.event_name == 'push' && github.event.compare || github.event.pull_request.html_url }})
+            🔗 [View Activity](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
