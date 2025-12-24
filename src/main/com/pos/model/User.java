@@ -1,7 +1,7 @@
 package main.com.pos.model;
 
 public class User {
-    private int id;
+    private int userId;
     private String username;
     private String password;
     private String role;
@@ -11,35 +11,69 @@ public class User {
     public User() {}
 
     public User(String username, String password) {
-        this.username = username;
-        this.password = password;
+        setUsername(username);
+        setPassword(password);
     }
 
-    public User(int id, String username, String password, String role, String name, String email) {
-        this.id = id;                               // primary key
-        this.username = username;                   // unique
-        this.password = password;                   // hashed password
-        this.role = role;                           // e.g., "admin", "cashier"
-        this.name = name;
-        this.email = email;
+    public User(int userId, String username, String password, String role, String name, String email) {
+        this.userId = userId;
+        setUsername(username);
+        setPassword(password);
+        setRole(role);
+        setName(name);
+        setEmail(email);
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 
     public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public final void setUsername(String username) { 
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        this.username = username; 
+    }
 
     public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public final void setPassword(String password) { 
+        if (password == null || password.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
+        this.password = password; 
+    }
 
     public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public final void setRole(String role) { 
+        if (role != null && !role.isEmpty()) {
+            this.role = role; 
+        }
+    }
 
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public final void setName(String name) { 
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        this.name = name; 
+    }
 
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public final void setEmail(String email) { 
+        if (email != null && !email.contains("@")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+        this.email = email; 
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", username='" + username + '\'' +
+                ", role='" + role + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
 

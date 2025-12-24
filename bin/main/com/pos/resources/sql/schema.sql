@@ -177,4 +177,3 @@ USE i3_pos_db;
         (3, NOW(), -5, 'Expired products', 1),
         (4, NOW(), 15, 'Restock', 4),
         (5, NOW(), -8, 'Stock correction', 1);
-
