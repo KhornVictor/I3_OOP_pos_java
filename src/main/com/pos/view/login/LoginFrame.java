@@ -219,24 +219,54 @@ public class LoginFrame extends JFrame {
     }
 
     private void handleLogin(@SuppressWarnings("unused") ActionEvent event) {
-        String username = txtUsername.getText();
+        String username = txtUsername.getText() == null ? "" : txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword());
-        User user = new User(username, password);
-        User authorizedUser = loginController.login(user);
+        password = password == null ? "" : password.trim();
 
-        if (authorizedUser != null) {
-            JOptionPane.showMessageDialog(this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            new DashboardFrame(authorizedUser.getUsername().isBlank() ? "User" : authorizedUser.getName()).setVisible(true);
-            dispose();
-        } else {
+        if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(
                 this,
-                "Invalid username or password",
-                "Login Failed",
+                "Please enter both username and password.",
+                "Missing Information",
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (username.isEmpty()) { txtUsername.requestFocusInWindow(); } else { txtPassword.requestFocusInWindow(); }
+            return;
+        }
+
+        try {
+            User user = new User(username, password);
+            User authorizedUser = loginController.login(user);
+
+            if (authorizedUser != null) {
+                JOptionPane.showMessageDialog(this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                new DashboardFrame(authorizedUser.getUsername() == null || authorizedUser.getUsername().isBlank() ? "User" : authorizedUser.getName()).setVisible(true);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid username or password",
+                    "Login Failed",
+                    JOptionPane.ERROR_MESSAGE
+                );
+                txtPassword.setText("");
+                txtPassword.requestFocusInWindow();
+            }
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Input Error",
                 JOptionPane.ERROR_MESSAGE
             );
-            txtPassword.setText("");
             txtPassword.requestFocusInWindow();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                "An unexpected error occurred. Please try again.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 }

@@ -52,10 +52,8 @@ public class User {
 
     public String getName() { return name; }
     public final void setName(String name) { 
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Name cannot be null or empty");
-        }
-        this.name = name; 
+        // Allow nullable/empty names to match DB schema and avoid blocking login
+        this.name = (name == null) ? "" : name.trim(); 
     }
 
     public String getEmail() { return email; }

@@ -8,7 +8,6 @@ import main.com.pos.config.DBConfig;
 public class DBConnection {
     private static Connection connection;
 
-    @SuppressWarnings("CallToPrintStackTrace")
     public static Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {

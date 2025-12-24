@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -22,10 +23,19 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import main.com.pos.view.pos.POSFrame;
+import main.com.pos.view.product.ProductPanel;
+import main.com.pos.view.report.ReportPanel;
 
 public class DashboardFrame extends JFrame {
+    @SuppressWarnings("FieldMayBeFinal")
+    private JPanel mainContent;
+    @SuppressWarnings("FieldMayBeFinal")
+    private JPanel header;
+    private final String userName;
 
     public DashboardFrame(String name) {
+        this.userName = name;
         setTitle("Dashboard");
         try {
             var image = javax.imageio.ImageIO.read(getClass().getClassLoader().getResourceAsStream("main/com/pos/resources/images/AppIcon.png"));
@@ -47,11 +57,11 @@ public class DashboardFrame extends JFrame {
         JPanel sidebar = createSidebar();
         root.add(sidebar, BorderLayout.WEST);
 
-        JPanel mainContent = new JPanel(new BorderLayout());
+        mainContent = new JPanel(new BorderLayout());
         mainContent.setOpaque(false);
         root.add(mainContent, BorderLayout.CENTER);
 
-        JPanel header = new JPanel(new BorderLayout());
+        header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(24, 32, 12, 32));
 
@@ -66,54 +76,7 @@ public class DashboardFrame extends JFrame {
         header.add(labelSub, BorderLayout.EAST);
 
         mainContent.add(header, BorderLayout.NORTH);
-
-        JPanel body = new JPanel(new GridBagLayout());
-        body.setOpaque(false);
-        body.setBorder(BorderFactory.createEmptyBorder(10, 32, 32, 32));
-        mainContent.add(body, BorderLayout.CENTER);
-
-        JPanel card = new RoundedPanel(18, new Color(255, 255, 255, 236), new Color(223, 230, 239));
-        card.setLayout(new GridBagLayout());
-        card.setBorder(BorderFactory.createEmptyBorder(28, 32, 28, 32));
-        card.setPreferredSize(new Dimension(960, 520));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.weightx = 1;
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel title = new JLabel("Control Center", SwingConstants.LEFT);
-        title.setFont(new Font("JetBrains Mono SemiBold", Font.PLAIN, 22));
-        title.setForeground(new Color(26, 46, 75));
-        gbc.gridy = 0;
-        card.add(title, gbc);
-
-        JLabel subtitle = new JLabel("Manage products, run sales, and review performance", SwingConstants.LEFT);
-        subtitle.setFont(new Font("JetBrains Mono", Font.PLAIN, 14));
-        subtitle.setForeground(new Color(93, 109, 126));
-        gbc.gridy = 1;
-        card.add(subtitle, gbc);
-
-        gbc.gridy = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 1;
-        JPanel grid = new JPanel(new GridBagLayout());
-        grid.setOpaque(false);
-        card.add(grid, gbc);
-
-        addModuleButton(grid, "Products", "Maintain catalog and stock.", 0, 0, new Color(59, 130, 246));
-        addModuleButton(grid, "POS", "Create and settle new orders.", 1, 0, new Color(16, 185, 129));
-        addModuleButton(grid, "Reports", "View revenue and trends.", 0, 1, new Color(236, 72, 153));
-        addModuleButton(grid, "Settings", "Configure store preferences.", 1, 1, new Color(99, 102, 241));
-
-        GridBagConstraints bodyConstraints = new GridBagConstraints();
-        bodyConstraints.gridx = 0;
-        bodyConstraints.gridy = 0;
-        bodyConstraints.weightx = 1;
-        bodyConstraints.weighty = 1;
-        bodyConstraints.fill = GridBagConstraints.BOTH;
-        body.add(card, bodyConstraints);
+        showHome();
     }
 
     private void addModuleButton(JPanel parent, String title, String caption, int x, int y, Color baseColor) {
@@ -145,6 +108,14 @@ public class DashboardFrame extends JFrame {
         action.setForeground(Color.WHITE);
         action.setFocusPainted(false);
         action.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14));
+        action.addActionListener(e -> {
+            switch (title) {
+                case "Products" -> showProducts();
+                case "POS" -> new POSFrame(null).setVisible(true);
+                case "Reports" -> showReports();
+                default -> System.out.println("Open clicked for: " + title);
+            }
+        });
         tile.add(action, BorderLayout.SOUTH);
 
         parent.add(tile, constraints);
@@ -217,7 +188,18 @@ public class DashboardFrame extends JFrame {
             });
 
             menuBtn.addActionListener(e -> {
-                System.out.println("Clicked: " + item);
+                String text = item.toLowerCase();
+                if (text.contains("products")) {
+                    showProducts();
+                } else if (text.contains("pos")) {
+                    new POSFrame(null).setVisible(true);
+                } else if (text.contains("reports")) {
+                    showReports();
+                } else if (text.contains("dashboard")) {
+                    showHome();
+                } else {
+                    System.out.println("Clicked: " + item);
+                }
             });
 
             menuPanel.add(menuBtn, gbc);
@@ -244,6 +226,125 @@ public class DashboardFrame extends JFrame {
         sidebar.add(footerPanel, BorderLayout.SOUTH);
 
         return sidebar;
+    }
+
+    private void showProducts() {
+        JLabel labelSub = new JLabel("Product Management", SwingConstants.RIGHT);
+        labelSub.setFont(new Font("JetBrains Mono", Font.PLAIN, 14));
+        labelSub.setForeground(new Color(80, 96, 112));
+        header.removeAll();
+        JLabel labelWelcome = new JLabel("Products", SwingConstants.LEFT);
+        labelWelcome.setFont(new Font("JetBrains Mono", Font.PLAIN, 24));
+        labelWelcome.setForeground(new Color(26, 46, 75));
+        header.add(labelWelcome, BorderLayout.WEST);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        right.setOpaque(false);
+        JButton backBtn = new JButton("Back to Dashboard");
+        backBtn.addActionListener(e -> showHome());
+        right.add(labelSub);
+        right.add(backBtn);
+        header.add(right, BorderLayout.EAST);
+
+        mainContent.removeAll();
+        mainContent.add(header, BorderLayout.NORTH);
+        mainContent.add(new ProductPanel(), BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    private void showReports() {
+        JLabel labelSub = new JLabel("Sales Reports", SwingConstants.RIGHT);
+        labelSub.setFont(new Font("JetBrains Mono", Font.PLAIN, 14));
+        labelSub.setForeground(new Color(80, 96, 112));
+        header.removeAll();
+        JLabel labelWelcome = new JLabel("Reports", SwingConstants.LEFT);
+        labelWelcome.setFont(new Font("JetBrains Mono", Font.PLAIN, 24));
+        labelWelcome.setForeground(new Color(26, 46, 75));
+        header.add(labelWelcome, BorderLayout.WEST);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        right.setOpaque(false);
+        JButton backBtn = new JButton("Back to Dashboard");
+        backBtn.addActionListener(e -> showHome());
+        right.add(labelSub);
+        right.add(backBtn);
+        header.add(right, BorderLayout.EAST);
+
+        mainContent.removeAll();
+        mainContent.add(header, BorderLayout.NORTH);
+        mainContent.add(new ReportPanel(), BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    private void showHome() {
+        header.removeAll();
+        JLabel labelWelcome = new JLabel("Welcome, " + userName, SwingConstants.LEFT);
+        labelWelcome.setFont(new Font("JetBrains Mono", Font.PLAIN, 24));
+        labelWelcome.setForeground(new Color(26, 46, 75));
+        header.add(labelWelcome, BorderLayout.WEST);
+
+        JLabel labelSub = new JLabel("Choose a module to get started", SwingConstants.RIGHT);
+        labelSub.setFont(new Font("JetBrains Mono", Font.PLAIN, 14));
+        labelSub.setForeground(new Color(80, 96, 112));
+        header.add(labelSub, BorderLayout.EAST);
+
+        mainContent.removeAll();
+        mainContent.add(header, BorderLayout.NORTH);
+
+        JPanel body = new JPanel(new GridBagLayout());
+        body.setOpaque(false);
+        body.setBorder(BorderFactory.createEmptyBorder(10, 32, 32, 32));
+
+        JPanel card = new RoundedPanel(18, new Color(255, 255, 255, 236), new Color(223, 230, 239));
+        card.setLayout(new GridBagLayout());
+        card.setBorder(BorderFactory.createEmptyBorder(28, 32, 28, 32));
+        card.setPreferredSize(new Dimension(960, 520));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.weightx = 1;
+        gbc.insets = new Insets(12, 12, 12, 12);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel title = new JLabel("Control Center", SwingConstants.LEFT);
+        title.setFont(new Font("JetBrains Mono SemiBold", Font.PLAIN, 22));
+        title.setForeground(new Color(26, 46, 75));
+        gbc.gridy = 0;
+        card.add(title, gbc);
+
+        JLabel subtitle = new JLabel("Manage products, run sales, and review performance", SwingConstants.LEFT);
+        subtitle.setFont(new Font("JetBrains Mono", Font.PLAIN, 14));
+        subtitle.setForeground(new Color(93, 109, 126));
+        gbc.gridy = 1;
+        card.add(subtitle, gbc);
+
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1;
+        JPanel grid = new JPanel(new GridBagLayout());
+        grid.setOpaque(false);
+        card.add(grid, gbc);
+
+        addModuleButton(grid, "Products", "Maintain catalog and stock.", 0, 0, new Color(59, 130, 246));
+        addModuleButton(grid, "POS", "Create and settle new orders.", 1, 0, new Color(16, 185, 129));
+        addModuleButton(grid, "Reports", "View revenue and trends.", 0, 1, new Color(236, 72, 153));
+        addModuleButton(grid, "Settings", "Configure store preferences.", 1, 1, new Color(99, 102, 241));
+
+        GridBagConstraints bodyConstraints = new GridBagConstraints();
+        bodyConstraints.gridx = 0;
+        bodyConstraints.gridy = 0;
+        bodyConstraints.weightx = 1;
+        bodyConstraints.weighty = 1;
+        bodyConstraints.fill = GridBagConstraints.BOTH;
+        body.add(card, bodyConstraints);
+
+        mainContent.add(body, BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    public JPanel getHeader() {
+        return header;
     }
 
     private static class GradientPanel extends JPanel {

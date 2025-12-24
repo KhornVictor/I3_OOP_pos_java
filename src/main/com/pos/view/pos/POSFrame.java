@@ -2,8 +2,8 @@ package main.com.pos.view.pos;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -98,7 +98,7 @@ public class POSFrame extends JFrame {
 
         // Product list
         List<Product> products = posController.getAvailableProducts();
-        productCombo = new JComboBox<>(products.toArray(new Product[products.size()]));
+        productCombo = new JComboBox<>(products.toArray(Product[]::new));
         productCombo.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
             JLabel label = new JLabel();
             if (value != null) {
@@ -209,7 +209,7 @@ public class POSFrame extends JFrame {
         completeBtn.setBackground(new Color(34, 139, 34));
         completeBtn.setForeground(Color.WHITE);
         completeBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        completeBtn.addActionListener(e -> completeSale());
+        completeBtn.addActionListener(e -> completeSale(0, 0));
         panel.add(completeBtn);
 
         JButton clearBtn = new JButton("Clear Cart");
@@ -278,7 +278,7 @@ public class POSFrame extends JFrame {
         finalTotalLabel.setText(String.format("$%.2f", posController.getCartFinalTotal()));
     }
 
-    private void completeSale() {
+    private void completeSale(int i, int j) {
         if (cartTableModel.getRowCount() == 0) {
             JOptionPane.showMessageDialog(this, "Cart is empty", "Error", JOptionPane.WARNING_MESSAGE);
             return;
