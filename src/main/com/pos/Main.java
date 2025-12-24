@@ -1,4 +1,5 @@
 package main.com.pos;
+import java.awt.EventQueue;
 import java.sql.SQLException;
 import main.com.pos.database.DBConnection;
 import main.com.pos.database.DBInitializer;
@@ -13,7 +14,6 @@ public class Main {
             DBTest.runTests(connection);
             DBInitializer.init();
         } catch (SQLException e) { System.err.println("❌ DB Test Failed!"); }
-        
-        java.awt.EventQueue.invokeLater(() -> {new LoginFrame().setVisible(true); });
+        EventQueue.invokeLater(() -> {new LoginFrame().setVisible(true); });
     }
 }

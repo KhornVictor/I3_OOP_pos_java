@@ -19,10 +19,8 @@ public class DBConfig {
                 DB_URL = properties.getProperty("db.url");
                 DB_USER = properties.getProperty("db.user");
                 DB_PASSWORD = properties.getProperty("db.password");
-            } else System.err.println("db.properties file not found. Place it on the classpath or at src/main/com/pos/resources/db.properties.");
-        } catch (IOException e) {
-            System.err.println("Error loading database configuration: " + e.getMessage());
-        }
+            } else System.err.println("❌ db.properties file not found. Place it on the classpath or at src/main/com/pos/resources/db.properties.");
+        } catch (IOException e) { System.err.println("❌ Error loading database configuration: " + e.getMessage()); }
     }
 
     public static String getDbUrl() {return DB_URL;}
