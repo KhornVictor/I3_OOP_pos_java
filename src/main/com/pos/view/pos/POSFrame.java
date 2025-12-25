@@ -209,7 +209,7 @@ public class POSFrame extends JFrame {
         completeBtn.setBackground(new Color(34, 139, 34));
         completeBtn.setForeground(Color.WHITE);
         completeBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        completeBtn.addActionListener(e -> completeSale(0, 0));
+        completeBtn.addActionListener(e -> completeSale());
         panel.add(completeBtn);
 
         JButton clearBtn = new JButton("Clear Cart");
@@ -278,7 +278,7 @@ public class POSFrame extends JFrame {
         finalTotalLabel.setText(String.format("$%.2f", posController.getCartFinalTotal()));
     }
 
-    private void completeSale(int i, int j) {
+    private void completeSale() {
         if (cartTableModel.getRowCount() == 0) {
             JOptionPane.showMessageDialog(this, "Cart is empty", "Error", JOptionPane.WARNING_MESSAGE);
             return;
@@ -287,7 +287,7 @@ public class POSFrame extends JFrame {
         String paymentType = JOptionPane.showInputDialog(this, "Payment Type (Cash/Card/Check):", "Cash");
         if (paymentType == null) return;
 
-        int customerId = 0;
+        int customerId;
         try {
             String customerIdStr = JOptionPane.showInputDialog(this, "Customer ID (or 0 for walk-in):", "0");
             customerId = Integer.parseInt(customerIdStr);

@@ -9,6 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.RenderingHints;
@@ -24,6 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import main.com.pos.components.ui.UI;
 import main.com.pos.controller.LoginController;
 import main.com.pos.model.User;
 import main.com.pos.service.AuthService;
@@ -36,9 +38,7 @@ public class LoginFrame extends JFrame {
     private JPasswordField txtPassword;
     private JButton btnLogin;
 
-    public LoginFrame() {
-        this(new LoginController(new AuthService()));
-    }
+    public LoginFrame() { this(new LoginController(new AuthService())); }
 
     public LoginFrame(LoginController loginController) {
         this.loginController = loginController;
@@ -47,12 +47,7 @@ public class LoginFrame extends JFrame {
 
     private void initUi() {
         setTitle("Login");
-        try {
-            var image = ImageIO.read(getClass().getClassLoader().getResourceAsStream("main/com/pos/resources/images/AppIcon.png"));
-            setIconImage(image);
-        } catch (IOException e) {
-            System.err.println("❌ Failed to load app icon.");
-        }
+        UI.setApplicationIcon(this, "main/com/pos/resources/images/AppIcon.png");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(900, 600));
         setLocationRelativeTo(null);
@@ -75,7 +70,7 @@ public class LoginFrame extends JFrame {
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel lblTitle = new JLabel("Point of Sale", SwingConstants.CENTER);
+        JLabel lblTitle = new JLabel( "Point of Sale", SwingConstants.CENTER);
         lblTitle.setFont(new Font("JetBrains Mono SemiBold", Font.BOLD, 28));
         lblTitle.setForeground(new Color(29, 53, 87));
         gbc.gridy = 0;
@@ -221,7 +216,7 @@ public class LoginFrame extends JFrame {
     private void handleLogin(@SuppressWarnings("unused") ActionEvent event) {
         String username = txtUsername.getText() == null ? "" : txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword());
-        password = password == null ? "" : password.trim();
+        password = password.trim();
 
         if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(
@@ -260,7 +255,7 @@ public class LoginFrame extends JFrame {
                 JOptionPane.ERROR_MESSAGE
             );
             txtPassword.requestFocusInWindow();
-        } catch (Exception ex) {
+        } catch (HeadlessException ex) {
             JOptionPane.showMessageDialog(
                 this,
                 "An unexpected error occurred. Please try again.",
