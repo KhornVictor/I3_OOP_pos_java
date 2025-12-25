@@ -31,4 +31,10 @@ public class DashboardFrame extends JFrame {
         actionPanel.add(new JButton("Reports"));
         add(actionPanel, BorderLayout.SOUTH);
     }
+
+    // public static void main(String[] args) {
+    //     javax.swing.SwingUtilities.invokeLater(() -> {
+    //         new DashboardFrame("Daniel Carter").setVisible(true);
+    //     });
+    // }
 }

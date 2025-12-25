@@ -10,8 +10,8 @@ public class Main {
         try {
             var connection = DBConnection.getConnection();
             if (connection != null && !connection.isClosed()) { System.out.println("✅ DB Test: Connection is active!"); }
-            DBTest.runTests(connection);
-            DBInitializer.init();
+            // DBTest.runTests(connection);
+            // DBInitializer.init();
         } catch (SQLException e) { System.err.println("❌ DB Test Failed!"); }
         
         java.awt.EventQueue.invokeLater(() -> {new LoginFrame().setVisible(true); });
