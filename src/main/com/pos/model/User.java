@@ -10,8 +10,9 @@ public class User {
 
     public User() {}
 
-    public User(String username) {
-        setUsername(username);
+
+    public User(String name) {
+        setName(name);
     }
 
     public User(String username, String password) {

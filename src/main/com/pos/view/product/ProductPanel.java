@@ -19,9 +19,6 @@ import javax.swing.table.DefaultTableModel;
 import main.com.pos.controller.ProductController;
 import main.com.pos.model.Product;
 
-/**
- * Embedded Product management panel for use inside Dashboard.
- */
 public class ProductPanel extends JPanel {
     private final ProductController productController;
     private JTable productTable;
