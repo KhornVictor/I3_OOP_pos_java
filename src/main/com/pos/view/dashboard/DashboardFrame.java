@@ -16,13 +16,14 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import main.com.pos.components.ui.UI;
+import main.com.pos.model.User;
 import main.com.pos.view.pos.POSFrame;
 import main.com.pos.view.product.ProductPanel;
 import main.com.pos.view.report.ReportPanel;
@@ -32,17 +33,13 @@ public class DashboardFrame extends JFrame {
     private JPanel mainContent;
     @SuppressWarnings("FieldMayBeFinal")
     private JPanel header;
-    private final String userName;
+    @SuppressWarnings("FieldMayBeFinal")
+    private User user;
 
-    public DashboardFrame(String name) {
-        this.userName = name;
+    public DashboardFrame(User user) {
+        this.user = user;
         setTitle("Dashboard");
-        try {
-            var image = javax.imageio.ImageIO.read(getClass().getClassLoader().getResourceAsStream("main/com/pos/resources/images/AppIcon.png"));
-            setIconImage(image);
-        } catch (IOException e) {
-            System.err.println("❌ Failed to load app icon.");
-        }
+        setIconImage(UI.setApplicationIcon("main/com/pos/resources/images/AppIcon.png"));
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(1024, 640));
         setLocationRelativeTo(null);
@@ -53,7 +50,6 @@ public class DashboardFrame extends JFrame {
         root.setLayout(new BorderLayout());
         add(root, BorderLayout.CENTER);
 
-        // Create sidebar
         JPanel sidebar = createSidebar();
         root.add(sidebar, BorderLayout.WEST);
 
@@ -65,7 +61,7 @@ public class DashboardFrame extends JFrame {
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(24, 32, 12, 32));
 
-        JLabel labelWelcome = new JLabel("Welcome, " + name, SwingConstants.LEFT);
+        JLabel labelWelcome = new JLabel("Welcome, " + this.user.getName(), SwingConstants.LEFT);
         labelWelcome.setFont(new Font("JetBrains Mono", Font.PLAIN, 24));
         labelWelcome.setForeground(new Color(26, 46, 75));
         header.add(labelWelcome, BorderLayout.WEST);
@@ -88,19 +84,15 @@ public class DashboardFrame extends JFrame {
         constraints.weightx = 1;
         constraints.weighty = 1;
 
-        JPanel tile = new RoundedPanel(14, Color.WHITE, new Color(225, 232, 240));
-        tile.setLayout(new BorderLayout());
-        tile.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
-
-        JLabel labelTitle = new JLabel(title);
-        labelTitle.setFont(new Font("JetBrains Mono SemiBold", Font.PLAIN, 18));
-        labelTitle.setForeground(new Color(30, 41, 59));
-        tile.add(labelTitle, BorderLayout.NORTH);
+        JPanel titlePanel = new RoundedPanel(14, Color.WHITE, new Color(225, 232, 240));
+        titlePanel.setLayout(new BorderLayout());
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+        titlePanel.add(UI.setLabel(title, new Font("JetBrains Mono SemiBold", Font.PLAIN, 18), new Color(30, 41, 59), SwingConstants.LEFT), BorderLayout.NORTH);
 
         JLabel labelCaption = new JLabel(caption);
         labelCaption.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
         labelCaption.setForeground(new Color(99, 115, 129));
-        tile.add(labelCaption, BorderLayout.CENTER);
+        titlePanel.add(labelCaption, BorderLayout.CENTER);
 
         JButton action = new RoundedButton("Open", 12);
         action.setFont(new Font("JetBrains Mono", Font.BOLD, 13));
@@ -116,9 +108,9 @@ public class DashboardFrame extends JFrame {
                 default -> System.out.println("Open clicked for: " + title);
             }
         });
-        tile.add(action, BorderLayout.SOUTH);
+        titlePanel.add(action, BorderLayout.SOUTH);
 
-        parent.add(tile, constraints);
+        parent.add(titlePanel, constraints);
     }
 
     private JPanel createSidebar() {
@@ -189,17 +181,11 @@ public class DashboardFrame extends JFrame {
 
             menuBtn.addActionListener(e -> {
                 String text = item.toLowerCase();
-                if (text.contains("products")) {
-                    showProducts();
-                } else if (text.contains("pos")) {
-                    new POSFrame(null).setVisible(true);
-                } else if (text.contains("reports")) {
-                    showReports();
-                } else if (text.contains("dashboard")) {
-                    showHome();
-                } else {
-                    System.out.println("Clicked: " + item);
-                }
+                if (text.contains("products")) showProducts();
+                else if (text.contains("pos")) new POSFrame(null).setVisible(true);
+                else if (text.contains("reports")) showReports();
+                else if (text.contains("dashboard")) showHome();
+                else System.out.println("Clicked: " + item);
             });
 
             menuPanel.add(menuBtn, gbc);
@@ -278,7 +264,7 @@ public class DashboardFrame extends JFrame {
 
     private void showHome() {
         header.removeAll();
-        JLabel labelWelcome = new JLabel("Welcome, " + userName, SwingConstants.LEFT);
+        JLabel labelWelcome = new JLabel("Welcome, " + user.getName(), SwingConstants.LEFT);
         labelWelcome.setFont(new Font("JetBrains Mono", Font.PLAIN, 24));
         labelWelcome.setForeground(new Color(26, 46, 75));
         header.add(labelWelcome, BorderLayout.WEST);

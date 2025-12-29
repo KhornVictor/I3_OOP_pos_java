@@ -4,7 +4,8 @@ import java.sql.SQLException;
 import main.com.pos.database.DBConnection;
 import main.com.pos.database.DBInitializer;
 import main.com.pos.database.DBTest;
-import main.com.pos.view.login.LoginFrame;
+import main.com.pos.model.User;
+import main.com.pos.view.dashboard.DashboardFrame;
 
 public class Main {
     public static void main(String[] args) {
@@ -14,6 +15,6 @@ public class Main {
             DBTest.runTests(connection);
             DBInitializer.init();
         } catch (SQLException e) { System.err.println("❌ DB Test Failed!"); }
-        EventQueue.invokeLater(() -> {new LoginFrame().setVisible(true); });
+        EventQueue.invokeLater(() -> {new DashboardFrame(new User("Guest")).setVisible(true); });
     }
 }

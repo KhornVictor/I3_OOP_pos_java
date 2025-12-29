@@ -2,6 +2,7 @@ package main.com.pos.view.login;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -100,27 +101,44 @@ public class LoginFrame extends JFrame {
         getRootPane().setDefaultButton(btnLogin);
     }
     
-    private void showErrorPanel(JPanel panel, String message, boolean setVisible) {
+    private void showErrorPanel(JPanel panel, String message, boolean setVisible, Color bgColor, Color stroke) {
+        for (Component component : panel.getComponents()) {
+            if (component instanceof JPanel && "errorPanel".equals(component.getName())) {
+                panel.remove(component);
+            }
+        }
 
-        JPanel errorPanel = UI.cardPanel(20, new Color(59, 130, 246, 180), new Color(59, 130, 246), null, BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        JLabel errorLabel = UI.setLabel(message, new Font("JetBrains Mono SemiBold", Font.PLAIN, 14), Color.RED, SwingConstants.CENTER);
-        Timer timer = new Timer(1000, e -> errorPanel.setVisible(false));
-       
+        JPanel errorPanel = UI.cardPanel(20, bgColor, stroke, null, BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        errorPanel.setName("errorPanel");
+        JLabel errorLabel = UI.setLabel(message, new Font("JetBrains Mono SemiBold", Font.PLAIN, 14), Color.WHITE, SwingConstants.CENTER);
+
+        final int visibleMs = 3000;
+        Timer timer = new Timer(visibleMs, event -> {
+            panel.remove(errorPanel);
+            panel.revalidate();
+            panel.repaint();
+        });
+
         panel.add(errorPanel, UI.setGridBagConstraints(1, 1, 1, 1, GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE, new Insets(0, 0, 30, 30), 1.0, 1.0));
         errorPanel.add(errorLabel);
         errorPanel.setVisible(setVisible);
+        panel.revalidate();
+        panel.repaint();
         timer.setRepeats(false);
         timer.start();
-        
+
     }
 
     private void handleLogin(@SuppressWarnings("unused") ActionEvent event) {
         String username = txtUsername.getText() == null ? "" : txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword());
         password = password.trim();
-        System.out.println("🔃 Attempting login for user: " + username);
         if (username.isEmpty() || password.isEmpty()) {
-            showErrorPanel(background, "Username and password cannot be empty.", true);
+            String message;
+            if (username.isEmpty() && password.isEmpty()) message = "Username and password cannot be empty.";
+            else if (username.isEmpty()) message = "Username cannot be empty.";
+            else message = "Password cannot be empty.";
+            showErrorPanel(background, message, true, new Color(220, 38, 38), new Color(220, 38, 38));
             if (username.isEmpty()) { txtUsername.requestFocusInWindow(); } else { txtPassword.requestFocusInWindow(); }
             return;
         }
@@ -130,20 +148,19 @@ public class LoginFrame extends JFrame {
             User authorizedUser = loginController.login(user);
 
             if (authorizedUser != null) {
-                System.out.println("✅ Login successful for user: " + authorizedUser.getUsername());
-                new DashboardFrame(authorizedUser.getUsername() == null || authorizedUser.getUsername().isBlank() ? "User" : authorizedUser.getName()).setVisible(true);
+                new DashboardFrame(authorizedUser).setVisible(true);
                 dispose();
             } else {
-                showErrorPanel(background, "Invalid username or password.", true);
                 txtPassword.setText("");
                 txtPassword.requestFocusInWindow();
+                showErrorPanel(background, "Invalid username or password.", true, new Color(220, 38, 38), new Color(220, 38, 38));
             }
         } catch (IllegalArgumentException ex) {
-            showErrorPanel(background, "Invalid username or password.", true);
             txtPassword.requestFocusInWindow();
+            showErrorPanel(background, "Invalid username or password.", true, new Color(220, 38, 38), new Color(220, 38, 38));
         } catch (HeadlessException ex) {
-            showErrorPanel(background, "An error occurred during login. Please try again.", true);
             System.err.println("❌ Error during login: " + ex.getMessage());
+            showErrorPanel(background, "An error occurred during login. Please try again.", true, new Color(220, 38, 38), new Color(220, 38, 38));
         }
     }
 }
