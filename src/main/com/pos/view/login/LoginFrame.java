@@ -19,12 +19,12 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
+import main.com.pos.components.layout.Layout;
 import main.com.pos.components.ui.UI;
 import main.com.pos.components.ui.UI.ImageBackgroundPanel;
 import main.com.pos.controller.LoginController;
 import main.com.pos.model.User;
 import main.com.pos.service.AuthService;
-import main.com.pos.view.dashboard.DashboardFrame;
 
 public class LoginFrame extends JFrame {
 
@@ -131,7 +131,7 @@ public class LoginFrame extends JFrame {
 
             if (authorizedUser != null) {
                 System.out.println("✅ Login successful for user: " + authorizedUser.getUsername());
-                new DashboardFrame(authorizedUser.getUsername() == null || authorizedUser.getUsername().isBlank() ? "User" : authorizedUser.getName()).setVisible(true);
+                new Layout(authorizedUser).setVisible(true);
                 dispose();
             } else {
                 showErrorPanel(background, "Invalid username or password.", true);

@@ -1,7 +1,9 @@
 package main.com.pos.components.ui;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -14,6 +16,7 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -47,11 +50,35 @@ public class UI extends JFrame {
     }
 
     public static JPanel cardPanel(int radius, Color fill, Color stroke, Dimension size, Border border) {
-        JPanel card = new RoundedPanel(radius, fill, stroke);
+        JPanel card = new RoundedPanel(radius, fill, stroke, size, border);
         card.setLayout(new GridBagLayout());
         card.setPreferredSize(size);
         card.setBorder(border);
         return card;
+    }
+
+    public static JLabel setIconLabel(String iconPath, int width, int height) {
+        JLabel iconLabel = new JLabel();
+        java.io.InputStream is = null;
+        try {
+            is = UI.class.getClassLoader().getResourceAsStream(iconPath);
+            if (is == null) {
+                System.err.println("❌ Icon not found on classpath: " + iconPath);
+                return iconLabel;
+            }
+            Image image = ImageIO.read(is);
+            if (image != null) {
+                Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                iconLabel.setIcon(new javax.swing.ImageIcon(scaledImage));
+            }
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("❌ Failed to load icon image: " + iconPath);
+        } finally {
+            if (is != null) {
+                try { is.close(); } catch (IOException ignored) {}
+            }
+        }
+        return iconLabel;
     }
 
     // GridBagConstraints object, which tells GridBagLayout how a component should be placed inside a container.
@@ -137,11 +164,15 @@ public class UI extends JFrame {
         private final Color fill;
         private final Color stroke;
 
-        public RoundedPanel(int radius, Color fill, Color stroke) {
+        public RoundedPanel(int radius, Color fill, Color stroke, Dimension size, Border border) {
             this.radius = radius;
             this.fill = fill;
             this.stroke = stroke;
             setOpaque(false);
+            setLayout(new BorderLayout());
+            setPreferredSize(size);
+            setBorder(border);
+
         }
 
         @Override
@@ -161,7 +192,7 @@ public class UI extends JFrame {
     public static class RoundedButton extends JButton {
         private final int radius;
 
-        RoundedButton(String text, int radius) {
+        public RoundedButton(String text, int radius) {
             super(text);
             this.radius = radius;
             setContentAreaFilled(false);
@@ -178,4 +209,75 @@ public class UI extends JFrame {
             g2.dispose();
         }
     }
+
+    public static class SidebarMenuButton extends JButton {
+
+        private boolean active = false;
+        private final JLabel iconLabel;
+        private final JLabel textLabel;
+
+        public SidebarMenuButton(JLabel iconLabel, JLabel textLabel) {
+            this.iconLabel = iconLabel;
+            this.textLabel = textLabel;
+
+            setLayout(new BorderLayout());
+            setOpaque(false);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            setRolloverEnabled(true);
+
+            JPanel inner = new JPanel(new BorderLayout());
+            inner.setOpaque(false);
+            inner.add(iconLabel, BorderLayout.WEST);
+            inner.add(textLabel, BorderLayout.CENTER);
+            add(inner, BorderLayout.CENTER);
+
+            updateColors();
+        }
+
+        public void setActive(boolean value) {
+            active = value;
+            updateColors();
+            repaint();
+        }
+
+        private void updateColors() {
+            if (active) {
+                textLabel.setForeground(Color.WHITE);
+                iconLabel.setForeground(Color.WHITE);
+            } else {
+                textLabel.setForeground(new Color(30, 41, 59));
+                iconLabel.setForeground(new Color(30, 41, 59));
+            }
+        }
+
+        @Override
+        protected void paintComponent(java.awt.Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(
+                    java.awt.RenderingHints.KEY_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            if (active) {
+                g2.setColor(new Color(59, 130, 246));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+
+            } else if (model.isPressed()) {
+                g2.setColor(new Color(203, 213, 225));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+
+            } else if (model.isRollover()) {
+                g2.setColor(new Color(226, 232, 240));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+            }
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+
 }
