@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -21,7 +22,8 @@ public class SideBar extends JPanel {
     public User user;
     private JButton activButton = null;
 
-    public SideBar(User user) {
+    public SideBar(User user, Navigation navigation) {
+        this.user = user;
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         setPreferredSize(new Dimension(280, 0));
@@ -41,12 +43,12 @@ public class SideBar extends JPanel {
                 java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Rounded background
+
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
                 
-                // Draw logo image if available; fallback to emoji
-                java.awt.Image icon = UI.setApplicationIcon("main/com/pos/resources/images/AppIcon.png");
+
+                Image icon = UI.internetImage("https://www.possystems.com/images/company/Logo256px.png");
                 if (icon != null) g2.drawImage(icon, 10, 8, 24, 24, this);
                 else {
                     g2.setColor(new Color(59, 130, 246));
@@ -81,17 +83,20 @@ public class SideBar extends JPanel {
         gbc.gridy = 0;
 
         String[][] menuItems = {
-            {"main/com/pos/resources/icons/menu/Dashboard.png", " Dashboard"},
-            {"main/com/pos/resources/icons/menu/Sale.png", " New Sale"},
-            {"main/com/pos/resources/icons/menu/Products.png", " Products"},
-            {"main/com/pos/resources/icons/menu/Customers.png", " Customers"},
-            {"main/com/pos/resources/icons/menu/Inventory.png", " Inventory"},
-            {"main/com/pos/resources/icons/menu/Reports.png", " Reports"},
-            {"main/com/pos/resources/icons/menu/Settings.png", "Settings"}
+            {"https://cdn-icons-png.flaticon.com/512/5581/5581393.png", " Dashboard"},
+            {"https://cdn-icons-png.freepik.com/512/7835/7835563.png", " New Sale"},
+            {"https://images.emojiterra.com/google/noto-emoji/unicode-15/color/512px/1f4e6.png", " Products"},
+            {"https://images.emojiterra.com/google/android-12l/512px/1f465.png", " Customers"},
+            {"https://cdn-icons-png.flaticon.com/512/1966/1966114.png", " Inventory"},
+            {"https://cdn-icons-png.flaticon.com/512/6005/6005505.png", " Reports"},
+            {"https://icons.iconarchive.com/icons/grafikartes/flat-retro-modern/512/settings-icon.png", " Settings"}
         };
 
         for (String[] item : menuItems) {
-            SidebarMenuButton menuBtn = new SidebarMenuButton(UI.setIconLabel(item[0], 24, 24), new JLabel(item[1]));
+            SidebarMenuButton menuBtn = new SidebarMenuButton(item[0], new JLabel(item[1]), 
+                Color.WHITE, Color.BLACK,
+                new Color(255, 255, 255), new Color(226, 232, 240), new Color(59, 130, 246), new Color(37, 99, 235)
+            );
             if (item[1].equals("Dashboard")) {
                 activButton = menuBtn;
                 menuBtn.setActive(true);
@@ -105,7 +110,12 @@ public class SideBar extends JPanel {
                 menuBtn.setActive(true);
 
                 String text = item[1].toLowerCase();
-                if (text.contains("products")) System.out.println("Products menu clicked");
+                String titleText = item[1].replaceFirst(" ", "");
+                navigation.setTitle(titleText);
+                
+                if (text.contains("products")) {
+                    System.out.println("Products menu clicked");
+                }
                 else if (text.contains("new sale")) new POSFrame(null).setVisible(true);
                 else if (text.contains("reports")) System.out.println("Reports menu clicked");
                 else if (text.contains("customers")) System.out.println("Customers menu clicked");
@@ -127,7 +137,12 @@ public class SideBar extends JPanel {
         JPanel footerPanel = new JPanel();
         footerPanel.setOpaque(false);
         footerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        SidebarMenuButton logoutButton = new SidebarMenuButton(UI.setIconLabel("main/com/pos/resources/icons/menu/Dashboard.png", 24, 24), new JLabel(" Logout"));
+        SidebarMenuButton logoutButton = new SidebarMenuButton(
+            "https://cdn-icons-png.flaticon.com/512/8212/8212701.png", 
+            new JLabel(" Logout"), 
+            Color.black, Color.white,
+            new Color(245, 38, 33),
+            new Color(174, 18, 13), new Color(245, 38, 33), new Color(245, 38, 33));
         logoutButton.setPreferredSize(new Dimension(240, 40));
         footerPanel.add(logoutButton);
         add(footerPanel, BorderLayout.SOUTH);

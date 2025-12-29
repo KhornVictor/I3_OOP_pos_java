@@ -148,6 +148,7 @@ public class LoginFrame extends JFrame {
             User authorizedUser = loginController.login(user);
 
             if (authorizedUser != null) {
+                showErrorPanel(background, "Login successful! Redirecting...", true, new Color(34, 197, 94), new Color(34, 197, 94));
                 new Layout(authorizedUser).setVisible(true);
                 dispose();
             } else {

@@ -15,6 +15,7 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -57,6 +58,16 @@ public class UI extends JFrame {
         return card;
     }
 
+    public static Image internetImage(String imageUrl) {
+        try {
+            Image image = ImageIO.read(new URL(imageUrl));
+            return image;
+        } catch (IOException e) {
+            System.err.println("❌ Failed to load image from URL: " + imageUrl);
+        }
+        return null;
+    }
+
     public static JLabel setIconLabel(String iconPath, int width, int height) {
         JLabel iconLabel = new JLabel();
         java.io.InputStream is = null;
@@ -79,6 +90,40 @@ public class UI extends JFrame {
             }
         }
         return iconLabel;
+    }
+
+
+    public static JLabel setInternetIconLabel(String imageUrl, int width, int height) {
+        JLabel iconLabel = new JLabel();
+        if (imageUrl != null) {
+            Image image = internetImage(imageUrl);
+            Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            iconLabel.setIcon(new javax.swing.ImageIcon(scaledImage));
+        }
+        return iconLabel;
+    }
+
+    public static JPanel setInternetIconPanel(String imageUrl, int width, int height) {
+        JPanel iconPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                Image image = internetImage(imageUrl);
+                if (image != null) {
+                    g2.drawImage(image, 0, 0, width, height, this);
+                } else {
+                    System.err.println("❌ Failed to load internet icon: " + imageUrl);
+                }
+
+                g2.dispose();
+            }
+        };
+        iconPanel.setOpaque(false);
+        iconPanel.setPreferredSize(new Dimension(width, height));
+        return iconPanel;
     }
 
     // GridBagConstraints object, which tells GridBagLayout how a component should be placed inside a container.
@@ -215,13 +260,26 @@ public class UI extends JFrame {
         private boolean active = false;
         private final JLabel iconLabel;
         private final JLabel textLabel;
+        private final Color normalBackgroundColor;
+        private final Color hoverBackgroundColor;
+        private final Color activeBackgroundColor;
+        private final Color pressedBackgroundColor;
+        private final Color fColor;
+        private final Color fColored;
 
-        public SidebarMenuButton(JLabel iconLabel, JLabel textLabel) {
-            this.iconLabel = iconLabel;
+
+        public SidebarMenuButton(String url, JLabel textLabel,Color fColor,Color fColored, Color normalBackgroundColor, Color hoverBackgroundColor, Color activeBackgroundColor, Color pressedBackgroundColor) {
+            this.iconLabel = UI.setInternetIconLabel(url, 24, 24);
             this.textLabel = textLabel;
+            this.normalBackgroundColor = normalBackgroundColor;
+            this.hoverBackgroundColor = hoverBackgroundColor;
+            this.activeBackgroundColor = activeBackgroundColor;
+            this.pressedBackgroundColor = pressedBackgroundColor;
+            this.fColor = fColor;
+            this.fColored = fColored;
 
             setLayout(new BorderLayout());
-            setOpaque(false);
+            setOpaque(true);
             setContentAreaFilled(false);
             setFocusPainted(false);
             setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
@@ -245,11 +303,11 @@ public class UI extends JFrame {
 
         private void updateColors() {
             if (active) {
-                textLabel.setForeground(Color.WHITE);
-                iconLabel.setForeground(Color.WHITE);
+                textLabel.setForeground(fColor);
+                iconLabel.setForeground(fColor);
             } else {
-                textLabel.setForeground(new Color(30, 41, 59));
-                iconLabel.setForeground(new Color(30, 41, 59));
+                textLabel.setForeground(fColored);
+                iconLabel.setForeground(fColored);
             }
         }
 
@@ -257,20 +315,23 @@ public class UI extends JFrame {
         protected void paintComponent(java.awt.Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(
-                    java.awt.RenderingHints.KEY_ANTIALIASING,
-                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON
+                java.awt.RenderingHints.KEY_ANTIALIASING,
+                java.awt.RenderingHints.VALUE_ANTIALIAS_ON
             );
 
             if (active) {
-                g2.setColor(new Color(59, 130, 246));
+                g2.setColor(activeBackgroundColor);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
 
             } else if (model.isPressed()) {
-                g2.setColor(new Color(203, 213, 225));
+                g2.setColor(pressedBackgroundColor);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
 
             } else if (model.isRollover()) {
-                g2.setColor(new Color(226, 232, 240));
+                g2.setColor(hoverBackgroundColor);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+            } else {
+                g2.setColor(normalBackgroundColor);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
             }
 

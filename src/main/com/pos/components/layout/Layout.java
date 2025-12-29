@@ -21,11 +21,12 @@ public class Layout extends JFrame {
         root.setOpaque(false);
 
         JPanel mainContent = new MainPanel();
+        Navigation navigation = new Navigation(user, "Welcome, " + user.getName());
+        mainContent.add(navigation, BorderLayout.NORTH);
         mainContent.add(new ContentPanel(), BorderLayout.CENTER);
-        mainContent.add(new Navigation(user), BorderLayout.NORTH);
         
         add(root, BorderLayout.CENTER);
-        root.add(new SideBar(user), BorderLayout.WEST);
+        root.add(new SideBar(user, navigation), BorderLayout.WEST);
         root.add(mainContent, BorderLayout.CENTER);
     }
 }

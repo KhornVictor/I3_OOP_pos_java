@@ -20,7 +20,9 @@ import main.com.pos.components.ui.UI.RoundedPanel;
 import main.com.pos.model.User;
 
 public class Navigation extends JPanel {
-    public Navigation(User user) {
+    private JLabel dashboardLabel;
+
+    public Navigation(User user, String tilePanel){ 
         setLayout(new BorderLayout());
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(24, 32, 12, 32));
@@ -31,7 +33,7 @@ public class Navigation extends JPanel {
         setBackground(Color.WHITE);
         setOpaque(true);
 
-        JLabel dashboardLabel = UI.setLabel("Dashboard", new Font("Segoe UI", Font.BOLD, 20), new Color(30, 41, 59), SwingConstants.LEFT);
+        dashboardLabel = UI.setLabel(tilePanel, new Font("Segoe UI", Font.BOLD, 20), new Color(30, 41, 59), SwingConstants.LEFT);
         add(dashboardLabel, BorderLayout.WEST);
 
         // Center section - Search bar
@@ -41,7 +43,7 @@ public class Navigation extends JPanel {
         JPanel searchPanel = new RoundedPanel(20, Color.WHITE, new Color(209, 213, 219), new Dimension(400, 40), BorderFactory.createEmptyBorder(8, 12, 8, 12));
 
         // Search icon (emoji fallback until an image is provided)
-        JLabel searchIcon = UI.setIconLabel("main/com/pos/resources/icons/search.png", 24, 24);
+        JLabel searchIcon = UI.setInternetIconLabel("https://icons.iconarchive.com/icons/icons8/windows-8/512/Very-Basic-Search-icon.png", 14, 14);
         searchIcon.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         searchIcon.setBorder(new EmptyBorder(0, 0, 0, 8));
         searchPanel.add(searchIcon, BorderLayout.WEST);
@@ -89,7 +91,7 @@ public class Navigation extends JPanel {
                 // Draw bell icon
                 g2.setColor(new Color(100, 116, 139));
                 g2.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                g2.drawImage(UI.setApplicationIcon("main/com/pos/resources/icons/notification.png"), 0, 0, 24, 24, this);
+                g2.drawImage(UI.internetImage("https://cdn-icons-png.flaticon.com/512/8310/8310386.png"), 0, 0, 30, 30, this);
                 
                 // Draw notification badge
                 g2.setColor(new Color(239, 68, 68));
@@ -118,13 +120,13 @@ public class Navigation extends JPanel {
         userInfoPanel.setOpaque(false);
         userInfoPanel.setBorder(new EmptyBorder(0, 0, 0, 12));
 
-        JLabel userName = new JLabel("Admin User");
+        JLabel userName = new JLabel(user.getName());
         userName.setFont(new Font("Segoe UI", Font.BOLD, 14));
         userName.setForeground(new Color(30, 41, 59));
         userName.setAlignmentX(JLabel.RIGHT_ALIGNMENT);
         userInfoPanel.add(userName);
 
-        JLabel userRole = new JLabel("Administrator");
+        JLabel userRole = new JLabel(user.getRole());
         userRole.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         userRole.setForeground(new Color(100, 116, 139));
         userRole.setAlignmentX(JLabel.RIGHT_ALIGNMENT);
@@ -147,7 +149,7 @@ public class Navigation extends JPanel {
                 // Draw user icon
                 g2.setColor(Color.WHITE);
                 g2.setFont(new Font("Segoe UI", Font.BOLD, 20));
-                g2.drawImage(UI.setApplicationIcon("main/com/pos/resources/icons/avatar.png"), 0, 0, 40, 40, this);
+                g2.drawImage(UI.internetImage("https://cdn-icons-png.freepik.com/512/147/147142.png"), 0, 0, 40, 40, this);
                 
                 g2.dispose();
             }
@@ -158,5 +160,11 @@ public class Navigation extends JPanel {
 
         rightPanel.add(userPanel);
         add(rightPanel, BorderLayout.EAST);
+    }
+
+    public void setTitle(String title) {
+        dashboardLabel.setText(title);
+        dashboardLabel.revalidate();
+        dashboardLabel.repaint();
     }
 }
