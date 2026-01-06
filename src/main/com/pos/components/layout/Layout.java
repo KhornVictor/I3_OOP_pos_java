@@ -8,6 +8,7 @@ import main.com.pos.components.ui.UI;
 import main.com.pos.model.User;
 
 public class Layout extends JFrame {
+
     public Layout(User user) {
         setTitle("Point of Sale System");
         setIconImage(UI.setApplicationIcon("main/com/pos/resources/images/AppIcon.png"));
@@ -21,12 +22,13 @@ public class Layout extends JFrame {
         root.setOpaque(false);
 
         JPanel mainContent = new MainPanel();
-        Navigation navigation = new Navigation(user, "Welcome, " + user.getName());
+        Navigation navigation = new Navigation(user, "Dashboard");
+        ContentPanel contentPanel = new ContentPanel();
         mainContent.add(navigation, BorderLayout.NORTH);
-        mainContent.add(new ContentPanel(), BorderLayout.CENTER);
+        mainContent.add(contentPanel, BorderLayout.CENTER);
         
         add(root, BorderLayout.CENTER);
-        root.add(new SideBar(user, navigation), BorderLayout.WEST);
+        root.add(new SideBar(user, navigation, contentPanel), BorderLayout.WEST);
         root.add(mainContent, BorderLayout.CENTER);
     }
 }

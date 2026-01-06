@@ -20,7 +20,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
-import main.com.pos.components.layout.Layout;
+import main.com.pos.build.ContentBuild;
 import main.com.pos.components.ui.UI;
 import main.com.pos.components.ui.UI.ImageBackgroundPanel;
 import main.com.pos.controller.LoginController;
@@ -103,9 +103,7 @@ public class LoginFrame extends JFrame {
     
     private void showErrorPanel(JPanel panel, String message, boolean setVisible, Color bgColor, Color stroke) {
         for (Component component : panel.getComponents()) {
-            if (component instanceof JPanel && "errorPanel".equals(component.getName())) {
-                panel.remove(component);
-            }
+            if (component instanceof JPanel && "errorPanel".equals(component.getName())) panel.remove(component);
         }
 
         JPanel errorPanel = UI.cardPanel(20, bgColor, stroke, null, BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -149,7 +147,7 @@ public class LoginFrame extends JFrame {
 
             if (authorizedUser != null) {
                 showErrorPanel(background, "Login successful! Redirecting...", true, new Color(34, 197, 94), new Color(34, 197, 94));
-                new Layout(authorizedUser).setVisible(true);
+                ContentBuild.build(authorizedUser);
                 dispose();
             } else {
                 txtPassword.setText("");

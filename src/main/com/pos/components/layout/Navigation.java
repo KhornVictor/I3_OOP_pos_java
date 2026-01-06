@@ -20,7 +20,7 @@ import main.com.pos.components.ui.UI.RoundedPanel;
 import main.com.pos.model.User;
 
 public class Navigation extends JPanel {
-    private JLabel dashboardLabel;
+    private final JLabel dashboardLabel;
 
     public Navigation(User user, String tilePanel){ 
         setLayout(new BorderLayout());

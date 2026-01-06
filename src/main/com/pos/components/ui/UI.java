@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -14,10 +15,14 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.geom.RoundRectangle2D;
 import java.io.IOException;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -25,6 +30,8 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import org.w3c.dom.events.MouseEvent;
 
 
 public class UI extends JFrame {
@@ -340,5 +347,199 @@ public class UI extends JFrame {
         }
     }
 
+    public static GradientCard actionCard(String title, String desc, Color color, String icon) {
+        return actionCardWithImage(title, desc, null, icon);
+    }
 
+    public static GradientCard actionCardWithImage(String title, String desc, String imageUrl, String icon) {
+        GradientCard card = new GradientCard(null);
+        
+        if (imageUrl != null) {
+            card.setBackgroundImage(imageUrl);
+        } else {
+            card.setBackgroundColor(new Color(100, 150, 200));
+        }
+
+        JLabel iconLbl = new JLabel(setInternetIconLabel(icon, 28, 28).getIcon());
+        iconLbl.setFont(new Font("Segoe UI", Font.PLAIN, 28));
+        iconLbl.setHorizontalAlignment(JLabel.CENTER);
+        iconLbl.setPreferredSize(new Dimension(50, 50));
+
+        JLabel titleLbl = new JLabel(title);
+        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        titleLbl.setForeground(Color.WHITE);
+
+        JLabel descLbl = new JLabel(desc);
+        descLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        descLbl.setForeground(new Color(255, 255, 255, 180));
+
+        card.add(iconLbl);
+        card.add(Box.createVerticalStrut(10));
+        card.add(titleLbl);
+        card.add(descLbl);
+
+        addHover(card);
+
+        return card;
+    }
+
+    public static void addHover(GradientCard card) {
+        card.addMouseListener(new MouseAdapter() {
+            @SuppressWarnings("unused")
+            public void mouseEntered(MouseEvent e) {
+                card.setBrightness(1.15f);
+                card.repaint();
+            }
+
+            @SuppressWarnings("unused")
+            public void mouseExited(MouseEvent e) {
+                card.setBrightness(1.0f);
+                card.repaint();
+            }
+        });
+    }
+    
+    public static class GradientCard extends JPanel {
+        private final Color baseColor;
+        private Image backgroundImage;
+        private float brightness = 1.0f;
+        private static final int RADIUS = 15;
+        private static final int SHADOW_SIZE = 8;
+
+        public GradientCard(Color baseColor) {
+            this.baseColor = baseColor;
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setBorder(new EmptyBorder(20, 20, 20, 20));
+            setOpaque(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        }
+
+        public void setBackgroundImage(String imageUrl) {
+            try {
+                this.backgroundImage = ImageIO.read(new URL(imageUrl));
+            } catch (IOException e) {
+                System.err.println("❌ Failed to load image: " + imageUrl);
+            }
+        }
+
+        public void setBackgroundColor(Color color) {
+            // This would require making baseColor non-final, or we can update the color logic
+        }
+
+        public void setBrightness(float brightness) {
+            this.brightness = brightness;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int width = getWidth();
+            int height = getHeight();
+
+            // Draw shadow
+            drawShadow(g2d, width, height);
+
+            // Draw rounded rectangle with gradient or image
+            RoundRectangle2D.Float shape = new RoundRectangle2D.Float(
+                    SHADOW_SIZE / 2, SHADOW_SIZE / 2,
+                    width - SHADOW_SIZE, height - SHADOW_SIZE,
+                    RADIUS, RADIUS
+            );
+
+            if (backgroundImage != null) {
+                // Draw background image
+                g2d.drawImage(backgroundImage, 
+                    (int)(SHADOW_SIZE / 2), (int)(SHADOW_SIZE / 2),
+                    (int)(width - SHADOW_SIZE), (int)(height - SHADOW_SIZE), 
+                    this);
+                
+                // Add a dark overlay for better text visibility
+                g2d.setColor(new Color(0, 0, 0, 100));
+                g2d.fill(shape);
+            } else if (baseColor != null) {
+                // Create gradient
+                Color color1 = brighten(baseColor, brightness);
+                Color color2 = brighten(darken(baseColor, 0.2f), brightness);
+
+                GradientPaint gradient = new GradientPaint(
+                        0, 0, color1,
+                        0, height, color2
+                );
+                g2d.setPaint(gradient);
+                g2d.fill(shape);
+            }
+            
+            // Draw rounded border
+            g2d.setColor(new Color(255, 255, 255, 50));
+            g2d.setStroke(new BasicStroke(1));
+            g2d.drawRoundRect((int)(SHADOW_SIZE / 2), (int)(SHADOW_SIZE / 2),
+                    (int)(width - SHADOW_SIZE - 1), (int)(height - SHADOW_SIZE - 1),
+                    RADIUS, RADIUS);
+        }
+
+        private void drawShadow(Graphics2D g2d, int width, int height) {
+            g2d.setColor(new Color(0, 0, 0, 30));
+            RoundRectangle2D.Float shadowShape = new RoundRectangle2D.Float(
+                    SHADOW_SIZE / 2 + 2, SHADOW_SIZE / 2 + 2,
+                    width - SHADOW_SIZE - 4, height - SHADOW_SIZE - 4,
+                    RADIUS, RADIUS
+            );
+            g2d.fill(shadowShape);
+        }
+
+        private Color brighten(Color color, float factor) {
+            return new Color(
+                    Math.min(255, (int) (color.getRed() * factor)),
+                    Math.min(255, (int) (color.getGreen() * factor)),
+                    Math.min(255, (int) (color.getBlue() * factor)),
+                    color.getAlpha()
+            );
+        }
+
+        private Color darken(Color color, float factor) {
+            return new Color(
+                    (int) (color.getRed() * (1 - factor)),
+                    (int) (color.getGreen() * (1 - factor)),
+                    (int) (color.getBlue() * (1 - factor)),
+                    color.getAlpha()
+            );
+        }
+    }
+
+     public static GradientCard statisticCard(String value, String title, String percent, Color color, String icon) {
+        GradientCard card = new GradientCard(color);
+
+        JLabel iconLbl = new JLabel(setInternetIconLabel(icon , 32, 32).getIcon());
+        iconLbl.setFont(new Font("Segoe UI", Font.PLAIN, 32));
+        iconLbl.setHorizontalAlignment(JLabel.CENTER);
+        iconLbl.setPreferredSize(new Dimension(50, 50));
+
+        JLabel valueLbl = new JLabel(value);
+        valueLbl.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        valueLbl.setForeground(Color.WHITE);
+
+        JLabel titleLbl = new JLabel(title);
+        titleLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        titleLbl.setForeground(new Color(255, 255, 255, 200));
+
+        JLabel percentLbl = new JLabel(percent);
+        percentLbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        percentLbl.setForeground(
+            percent.startsWith("-") ? new Color(255, 100, 100) : new Color(100, 255, 100)
+        );
+
+        card.add(iconLbl);
+        card.add(Box.createVerticalStrut(10));
+        card.add(valueLbl);
+        card.add(titleLbl);
+        card.add(Box.createVerticalStrut(5));
+        card.add(percentLbl);
+
+        addHover(card);
+
+        return card;
+    }
 }

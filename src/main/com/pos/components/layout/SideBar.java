@@ -15,14 +15,17 @@ import javax.swing.JPanel;
 import main.com.pos.components.ui.UI;
 import main.com.pos.components.ui.UI.SidebarMenuButton;
 import main.com.pos.model.User;
+import main.com.pos.view.dashboard.DashboardPanel;
+import main.com.pos.view.inventory.InventoryDashboardPanel;
 import main.com.pos.view.pos.POSFrame;
+import main.com.pos.view.product.ProductPanel;
 
 public class SideBar extends JPanel {
 
     public User user;
     private JButton activButton = null;
 
-    public SideBar(User user, Navigation navigation) {
+    public SideBar(User user, Navigation navigation, ContentPanel contentPanel) {
         this.user = user;
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
@@ -113,13 +116,28 @@ public class SideBar extends JPanel {
                 String titleText = item[1].replaceFirst(" ", "");
                 navigation.setTitle(titleText);
                 
-                if (text.contains("products")) {
-                    System.out.println("Products menu clicked");
+                if (text.contains("dashboard")) {
+                    contentPanel.removeAll();
+                    contentPanel.add(new DashboardPanel(), BorderLayout.CENTER);
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                }
+                else if (text.contains("products")) {
+                    contentPanel.removeAll();
+                    contentPanel.add(new ProductPanel(), BorderLayout.CENTER);
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
                 }
                 else if (text.contains("new sale")) new POSFrame(null).setVisible(true);
                 else if (text.contains("reports")) System.out.println("Reports menu clicked");
                 else if (text.contains("customers")) System.out.println("Customers menu clicked");
-                else if (text.contains("inventory")) System.out.println("Inventory menu clicked");
+                else if (text.contains("inventory")){
+                    System.out.println("Inventory menu clicked");
+                    contentPanel.removeAll();
+                    contentPanel.add(new InventoryDashboardPanel(), BorderLayout.CENTER);
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                }
                 else if (text.contains("settings")) System.out.println("Settings menu clicked");
                 else System.out.println("Clicked: " + item[1]);
             });

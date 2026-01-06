@@ -5,13 +5,18 @@ import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import main.com.pos.view.dashboard.DashboardPanel;
 
 public class ContentPanel extends JPanel {
+
+    DashboardPanel dashboardPanel = new DashboardPanel();
+
     public ContentPanel(){
         setLayout(new BorderLayout());
         setBackground(new Color(248, 250, 252));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         add(welcomePanel(), BorderLayout.CENTER);
+        add(dashboardPanel, BorderLayout.CENTER);
     }
 
     static JPanel welcomePanel() {
