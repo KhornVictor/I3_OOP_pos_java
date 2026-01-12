@@ -2,6 +2,7 @@ package main.com.pos.thread;
 
 import java.awt.EventQueue;
 import main.com.pos.build.ContentBuild;
+import main.com.pos.util.Color;
 
 
 public class RenderingGraphic implements Runnable {
@@ -13,6 +14,6 @@ public class RenderingGraphic implements Runnable {
             new ContentBuild().buildDashboard();
         });
         long endTime = System.currentTimeMillis();
-        System.out.println("Rendering graphic task completed in " + (endTime - startTime) + " ms");
+        System.out.println(Color.GREEN + "⚙️  Rendering graphic task completed in " + (endTime - startTime) + " ms" + Color.RESET);
     }
 }

@@ -23,7 +23,7 @@ public class Layout extends JFrame {
 
         JPanel mainContent = new MainPanel();
         Navigation navigation = new Navigation(user, "Dashboard");
-        ContentPanel contentPanel = new ContentPanel();
+        ContentPanel contentPanel = new ContentPanel(user);
         mainContent.add(navigation, BorderLayout.NORTH);
         mainContent.add(contentPanel, BorderLayout.CENTER);
         

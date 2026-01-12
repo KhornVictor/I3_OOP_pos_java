@@ -13,7 +13,7 @@ public class ProductDAO {
 
     public List<Product> getAll() {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock FROM Product";
+        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock, Image FROM Product";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -27,7 +27,7 @@ public class ProductDAO {
     }
 
     public Product getById(int id) {
-        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock FROM Product WHERE ProductID = ?";
+        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock, Image FROM Product WHERE ProductID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, id);
@@ -42,7 +42,7 @@ public class ProductDAO {
 
     public List<Product> getByCategory(int categoryId) {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock FROM Product WHERE CategoryID = ?";
+        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock, Image FROM Product WHERE CategoryID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, categoryId);
@@ -58,13 +58,14 @@ public class ProductDAO {
     }
 
     public boolean create(Product product) {
-        String sql = "INSERT INTO Product (Name, CategoryID, Price, Stock) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Product (Name, CategoryID, Price, Stock, Image) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
             preparedStatement.setInt(2, product.getCategoryId());
             preparedStatement.setDouble(3, product.getPrice());
             preparedStatement.setInt(4, product.getStockQuantity());
+            preparedStatement.setString(5, product.getImage());
             int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("✅ Product created successfully");
@@ -77,14 +78,15 @@ public class ProductDAO {
     }
 
     public boolean update(Product product) {
-        String sql = "UPDATE Product SET Name = ?, CategoryID = ?, Price = ?, Stock = ? WHERE ProductID = ?";
+        String sql = "UPDATE Product SET Name = ?, CategoryID = ?, Price = ?, Stock = ?, Image = ? WHERE ProductID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
             preparedStatement.setInt(2, product.getCategoryId());
             preparedStatement.setDouble(3, product.getPrice());
             preparedStatement.setInt(4, product.getStockQuantity());
-            preparedStatement.setInt(5, product.getProductId());
+            preparedStatement.setString(5, product.getImage());
+            preparedStatement.setInt(6, product.getProductId());
             int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("✅ Product updated successfully");
@@ -120,9 +122,7 @@ public class ProductDAO {
             preparedStatement.setInt(2, productId);
             int affectedRows = preparedStatement.executeUpdate();
             return affectedRows > 0;
-        } catch (SQLException error) {
-            System.out.println("❌ updateStock error: " + error.getMessage());
-        }
+        } catch (SQLException error) { System.out.println("❌ updateStock error: " + error.getMessage()); }
         return false;
     }
 
@@ -132,6 +132,7 @@ public class ProductDAO {
         int categoryId = resultSet.getInt("CategoryID");
         double price = resultSet.getDouble("Price");
         int stockQuantity = resultSet.getInt("Stock");
-        return new Product(productId, name, categoryId, price, stockQuantity);
+        String image = resultSet.getString("Image");
+        return new Product(productId, name, categoryId, price, stockQuantity, image);
     }
 }

@@ -19,6 +19,7 @@ import main.com.pos.view.dashboard.DashboardPanel;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
 import main.com.pos.view.pos.POSFrame;
 import main.com.pos.view.product.ProductPanel;
+import main.com.pos.view.setting.SettingPanel;
 
 public class SideBar extends JPanel {
 
@@ -138,7 +139,12 @@ public class SideBar extends JPanel {
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
-                else if (text.contains("settings")) System.out.println("Settings menu clicked");
+                else if (text.contains("settings")) {
+                    contentPanel.removeAll();
+                    contentPanel.add(new SettingPanel(), BorderLayout.CENTER);
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                }
                 else System.out.println("Clicked: " + item[1]);
             });
 

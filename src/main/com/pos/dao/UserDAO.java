@@ -12,7 +12,7 @@ import main.com.pos.model.User;
 public class UserDAO {
 
 	public User getById(int id) {
-		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User WHERE UserID = ?";
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email, Image FROM User WHERE UserID = ?";
 		try (
             Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(sql)
@@ -26,7 +26,7 @@ public class UserDAO {
 	}
 
 	public User getByUsername(String username) {
-		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User WHERE Username = ?";
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email, Image FROM User WHERE Username = ?";
 		try (
             Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(sql)
@@ -38,7 +38,7 @@ public class UserDAO {
 	}
 
 	public User authenticate(User user) {
-		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User WHERE Username = ? AND Password = ?";
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email, Image FROM User WHERE Username = ? AND Password = ?";
 		try (
             Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(sql)
@@ -53,7 +53,7 @@ public class UserDAO {
 	}
 
 	public List<User> getAll() {
-		String sql = "SELECT UserID, Username, Password, Role, Name, Email FROM User ORDER BY UserID";
+		String sql = "SELECT UserID, Username, Password, Role, Name, Email, Image FROM User ORDER BY UserID";
 		List<User> result = new ArrayList<>();
 		try (Connection connection = DBConnection.getConnection();
 			 PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -71,6 +71,7 @@ public class UserDAO {
 		user.setRole(resultSet.getString("Role"));
 		user.setName(resultSet.getString("Name"));
 		user.setEmail(resultSet.getString("Email"));
+		user.setImage(resultSet.getString("Image"));
 		return user;
 	}
 }

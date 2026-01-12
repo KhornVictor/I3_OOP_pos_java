@@ -7,6 +7,7 @@ public class User {
     private String role;
     private String name;
     private String email;
+    private String image;
 
     public User() {}
 
@@ -27,6 +28,17 @@ public class User {
         setRole(role);
         setName(name);
         setEmail(email);
+        setImage("images/avatar/default.png");
+    }
+
+    public User(int userId, String username, String password, String role, String name, String email, String image) {
+        this.userId = userId;
+        setUsername(username);
+        setPassword(password);
+        setRole(role);
+        setName(name);
+        setEmail(email);
+        setImage(image);
     }
 
     public int getUserId() { return userId; }
@@ -60,6 +72,9 @@ public class User {
         // Allow nullable/empty names to match DB schema and avoid blocking login
         this.name = (name == null) ? "" : name.trim(); 
     }
+
+    public String getImage() { return this.image; }
+    public final void setImage(String image) { this.image = image; }
 
     public String getEmail() { return email; }
     public final void setEmail(String email) { 

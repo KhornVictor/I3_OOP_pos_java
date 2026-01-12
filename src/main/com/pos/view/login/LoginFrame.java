@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.time.LocalTime;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,25 +46,23 @@ public class LoginFrame extends JFrame {
     }
 
     private void initializeUI() {
-
-        // initialize components
-        background = UI.setBackgroundImage("main/com/pos/resources/images/LoginBackground.png");
+        background = UI.setBackgroundImage("images/background/login/" + timeSpan() + ".png");
         JPanel card = UI.cardPanel(18, new Color(255, 255, 255, 235), new Color(216, 224, 233), new Dimension(500, 480), BorderFactory.createEmptyBorder(100, 100, 100, 100));
         GridBagConstraints gridBagConstraints = UI.setGridBagConstraints(0, 0, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(10, 0, 10, 0), 1.0, 0.0);
         JLabel labels[] = {
-            UI.setLabel("Point of Sale", new Font("JetBrains Mono SemiBold", Font.PLAIN, 24), new Color(30, 41, 59), SwingConstants.CENTER),
-            UI.setLabel("Welcome back! Please sign in.", new Font("JetBrains Mono", Font.PLAIN, 14), new Color(100, 116, 139), SwingConstants.CENTER),
+            UI.setLabel("Point of Sale", new Font("Arial Bold", Font.PLAIN, 24), new Color(30, 41, 59), SwingConstants.CENTER),
+            UI.setLabel("Welcome back! Please sign in.", new Font("Arial", Font.PLAIN, 14), new Color(100, 116, 139), SwingConstants.CENTER),
         };
         JPanel formPanel = UI.spacerPanel(new Dimension(400, 200), false);
-        txtUsername = UI.setTextInput(new Font("JetBrains Mono", Font.PLAIN, 14), new Color(255, 255, 255), new Color(31, 41, 55), new Color(31, 41, 55), BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(214, 226, 245), 1),BorderFactory.createEmptyBorder(10, 12, 10, 12)));
-        txtPassword = UI.setPasswordInput(new Font("JetBrains Mono", Font.PLAIN, 14), new Color(255, 255, 255), new Color(31, 41, 55), new Color(31, 41, 55), BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(214, 226, 245), 1), BorderFactory.createEmptyBorder(10, 12, 10, 12)));
+        txtUsername = UI.setTextInput(new Font("Arial", Font.PLAIN, 14), new Color(255, 255, 255), new Color(31, 41, 55), new Color(31, 41, 55), BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(214, 226, 245), 1),BorderFactory.createEmptyBorder(10, 12, 10, 12)));
+        txtPassword = UI.setPasswordInput(new Font("Arial", Font.PLAIN, 14), new Color(255, 255, 255), new Color(31, 41, 55), new Color(31, 41, 55), BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(214, 226, 245), 1), BorderFactory.createEmptyBorder(10, 12, 10, 12)));
         GridBagConstraints fGridBagConstraints = UI.setGridBagConstraints( 0, 0, 1, 1, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(8, 0, 8, 0), 1.0, 0.0 );
         JLabel[] inputLabels = {
-            UI.setLabel("Username", new Font("JetBrains Mono SemiBold", Font.PLAIN, 14), new Color(55, 65, 81), SwingConstants.LEFT),
-            UI.setLabel("Password", new Font("JetBrains Mono SemiBold", Font.PLAIN, 14), new Color(55, 65, 81), SwingConstants.LEFT)
+            UI.setLabel("Username", new Font("Arial Bold", Font.PLAIN, 14), new Color(55, 65, 81), SwingConstants.LEFT),
+            UI.setLabel("Password", new Font("Arial Bold", Font.PLAIN, 14), new Color(55, 65, 81), SwingConstants.LEFT)
         };
-        btnLogin = UI.setButton("Login", new Font("JetBrains Mono SemiBold", Font.PLAIN, 16), new Color(59, 130, 246), Color.WHITE, BorderFactory.createEmptyBorder(10, 0, 10, 0), 8, this::handleLogin);
-        JLabel footer = UI.setLabel("Secure access • POS Suite", new Font("JetBrains Mono", Font.PLAIN, 12), new Color(100, 116, 139), SwingConstants.CENTER);   
+        btnLogin = UI.setButton("Login", new Font("Arial Bold", Font.PLAIN, 16), new Color(59, 130, 246), Color.WHITE, BorderFactory.createEmptyBorder(10, 0, 10, 0), 8, this::handleLogin);
+        JLabel footer = UI.setLabel("Secure access • POS Suite", new Font("Arial", Font.PLAIN, 12), new Color(100, 116, 139), SwingConstants.CENTER);   
         
         // build UI
         setTitle("Login");
@@ -161,5 +160,14 @@ public class LoginFrame extends JFrame {
             System.err.println("❌ Error during login: " + ex.getMessage());
             showErrorPanel(background, "An error occurred during login. Please try again.", true, new Color(220, 38, 38), new Color(220, 38, 38));
         }
+    }
+
+    private String timeSpan() {
+        int hour = LocalTime.now().getHour();
+        if (hour >= 5 && hour < 10) return "Morning";
+        if (hour >= 10 && hour < 13) return "Noon";
+        if (hour >= 13 && hour < 17) return "Afternoon";
+        if (hour >= 17 && hour < 22) return "Evening";
+        return "Night";
     }
 }
