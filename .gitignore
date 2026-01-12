@@ -1,0 +1,28 @@
+# Build outputs
+/bin/
+/target/
+/out/
+*.class
+
+# IDE / tooling
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Logs
+*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
+
+# Dependency caches
+.gradle/
+
+# Application resources to keep local only
+src/main/com/pos/resources/images/
