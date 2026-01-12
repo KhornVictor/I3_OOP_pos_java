@@ -40,12 +40,15 @@ public class Product {
         }
         this.price = price; 
     }
+    
     public final void setStockQuantity(int stockQuantity) { 
         if (stockQuantity < 0) {
             throw new IllegalArgumentException("Stock quantity cannot be negative");
         }
         this.stockQuantity = stockQuantity; 
     }
+
+    public final void setImage(String image) { this.image = image; }
 
     @Override
     public String toString() {
