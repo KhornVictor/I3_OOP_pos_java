@@ -8,7 +8,6 @@ import main.com.pos.model.User;
 import main.com.pos.view.welcome.WelcomePanel;
 
 public class ContentPanel extends JPanel {
-
     public ContentPanel(User user) {
         setLayout(new BorderLayout());
         setBackground(new Color(248, 250, 252));

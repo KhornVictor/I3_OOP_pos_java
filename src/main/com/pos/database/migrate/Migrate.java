@@ -12,6 +12,20 @@ public class Migrate {
             Connection connection = DBConnection.getConnection();
             Statement statement = connection.createStatement();
 
+            // Table Address
+            statement.execute(
+                """
+                    CREATE TABLE IF NOT EXISTS Address (
+                        AddressID INT AUTO_INCREMENT PRIMARY KEY,
+                        Street VARCHAR(255),
+                        City VARCHAR(100),
+                        State VARCHAR(100),
+                        ZipCode VARCHAR(20),
+                        Country VARCHAR(100)
+                    ) ENGINE=InnoDB;
+                """
+            );
+
             // Table User
             statement.execute(
                 """
@@ -22,7 +36,12 @@ public class Migrate {
                         Role VARCHAR(20) NOT NULL,
                         Name VARCHAR(100),
                         Email VARCHAR(100),
-                        Image VARCHAR(255)
+                        AddressID INT,
+                        Image VARCHAR(255),
+                        
+                        CONSTRAINT fk_user_address
+                            FOREIGN KEY (AddressID)
+                            REFERENCES Address(AddressID)
                     ) ENGINE=InnoDB;
                 """
             );
@@ -58,7 +77,8 @@ public class Migrate {
                         Name VARCHAR(100) NOT NULL,
                         CategoryID INT NOT NULL,
                         Price DECIMAL(10,2) NOT NULL,
-                        Stock INT NOT NULL,
+                        StockQuantity INT NOT NULL,
+                        Image VARCHAR(255),
 
                         CONSTRAINT fk_product_category
                             FOREIGN KEY (CategoryID)
@@ -72,7 +92,7 @@ public class Migrate {
                 """
                     CREATE TABLE IF NOT EXISTS Sale (
                         SaleID INT AUTO_INCREMENT PRIMARY KEY,
-                        DateTime DATETIME NOT NULL,
+                        SaleDate DATETIME NOT NULL,
                         UserID INT NOT NULL,
                         CustomerID INT,
                         Total DECIMAL(10,2) NOT NULL,
@@ -136,8 +156,8 @@ public class Migrate {
                     CREATE TABLE IF NOT EXISTS InventoryAdjustment (
                         AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
                         ProductID INT NOT NULL,
-                        DateTime DATETIME NOT NULL,
-                        QuantityChanged INT NOT NULL,
+                        AdjustmentDate DATETIME NOT NULL,
+                        QuantityChange INT NOT NULL,
                         Reason VARCHAR(255),
                         UserID INT NOT NULL,
 

@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import main.com.pos.components.ui.UI;
 import main.com.pos.model.User;
+import main.com.pos.view.dashboard.DashboardPanel;
 
 public class Layout extends JFrame {
 
@@ -22,13 +23,21 @@ public class Layout extends JFrame {
         root.setOpaque(false);
 
         JPanel mainContent = new MainPanel();
-        Navigation navigation = new Navigation(user, "Dashboard");
         ContentPanel contentPanel = new ContentPanel(user);
+        Navigation navigation = new Navigation(user, "Dashboard", contentPanel, null);
+        SideBar sideBar = new SideBar(user, navigation, contentPanel);
+        navigation = new Navigation(user, "Dashboard", contentPanel, sideBar);
+        sideBar = new SideBar(user, navigation, contentPanel);
+        
+        // Add initial dashboard panel
+        contentPanel.removeAll();
+        contentPanel.add(new DashboardPanel(contentPanel, user, navigation, sideBar), BorderLayout.CENTER);
+        
         mainContent.add(navigation, BorderLayout.NORTH);
         mainContent.add(contentPanel, BorderLayout.CENTER);
         
         add(root, BorderLayout.CENTER);
-        root.add(new SideBar(user, navigation, contentPanel), BorderLayout.WEST);
+        root.add(sideBar, BorderLayout.WEST);
         root.add(mainContent, BorderLayout.CENTER);
     }
 }

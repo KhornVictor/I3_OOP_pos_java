@@ -1,8 +1,10 @@
 package main.com.pos.view.setting;
 
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import main.com.pos.components.ui.UI;
 import main.com.pos.model.User;
 
 public class SettingPanel extends JPanel {
@@ -13,15 +15,9 @@ public class SettingPanel extends JPanel {
     private JLabel roleLabel;
     private JLabel dateTimeLabel;
 
-    public SettingPanel() {
-        initializePanel();
-    }
-
-    @SuppressWarnings("OverridableMethodCallInConstructor")
     public SettingPanel(User user) {
         this.currentUser = user;
         initializePanel();
-        if (user != null) updateUserInfo(user);
     }
 
     private void initializePanel() {
@@ -29,12 +25,12 @@ public class SettingPanel extends JPanel {
         setBackground(new Color(245, 246, 248));
         setBorder(new EmptyBorder(40, 40, 40, 40));
 
-        add(createWelcomeSection(currentUser), BorderLayout.NORTH);
-        add(createGreetingMessage(currentUser), BorderLayout.CENTER);
-        add(createQuickStartSection(currentUser), BorderLayout.SOUTH);
+        add(createWelcomeSection(), BorderLayout.NORTH);
+        add(createGreetingMessage(), BorderLayout.CENTER);
+        add(createQuickStartSection(), BorderLayout.SOUTH);
     }
 
-    private JPanel createWelcomeSection(User user) {
+    private JPanel createWelcomeSection() {
         JPanel container = new JPanel(new BorderLayout(20, 0));
         container.setOpaque(false);
         container.setBorder(new EmptyBorder(0, 0, 40, 0));
@@ -56,41 +52,70 @@ public class SettingPanel extends JPanel {
         panel.setOpaque(false);
         panel.setPreferredSize(new Dimension(100, 100));
 
-        // Create a circular avatar placeholder
         JLabel avatarLabel = new JLabel() {
+
+            private final int SIZE = 100;
+
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
+                Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Draw circular background
-                g2d.setColor(new Color(76, 175, 80));
-                g2d.fillOval(0, 0, 100, 100);
+                // Clip to circle
+                Shape circle = new Ellipse2D.Float(0, 0, SIZE, SIZE);
+                g2d.setClip(circle);
 
-                // Draw border
+                // Background
+                g2d.setColor(new Color(76, 175, 80));
+                g2d.fill(circle);
+
+                // Draw avatar image if exists
+                Image avatarImage = null;
+                if (currentUser != null && currentUser.getImage() != null) {
+                    avatarImage = UI.getImage(currentUser.getImage());
+                }
+
+                if (avatarImage != null) {
+                    g2d.drawImage(avatarImage, 0, 0, SIZE, SIZE, this);
+                } else {
+                    // Draw initials fallback
+                    String initials = currentUser != null
+                            ? String.valueOf(currentUser.getName().charAt(0)).toUpperCase()
+                            : "U";
+
+                    g2d.setColor(Color.WHITE);
+                    g2d.setFont(new Font("Segoe UI", Font.BOLD, 40));
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int x = (SIZE - fm.stringWidth(initials)) / 2;
+                    int y = (SIZE - fm.getHeight()) / 2 + fm.getAscent();
+                    g2d.drawString(initials, x, y);
+                }
+
+                g2d.setClip(null);
+
+                // Border
                 g2d.setColor(new Color(56, 142, 60));
                 g2d.setStroke(new BasicStroke(3));
-                g2d.drawOval(0, 0, 100, 100);
+                g2d.drawOval(1, 1, SIZE - 2, SIZE - 2);
 
-                // Draw initial or default avatar
-                String initials = currentUser != null ? 
-                    String.valueOf(currentUser.getName().charAt(0)).toUpperCase() : "U";
-                
-                g2d.setColor(Color.WHITE);
-                g2d.setFont(new Font("Segoe UI", Font.BOLD, 40));
-                FontMetrics fm = g2d.getFontMetrics();
-                int x = (100 - fm.stringWidth(initials)) / 2;
-                int y = ((100 - fm.getHeight()) / 2) + fm.getAscent();
-                g2d.drawString(initials, x, y);
+                g2d.dispose();
+            }
 
-                super.paintComponent(g);
+            @Override
+            public boolean contains(int x, int y) {
+                double dx = x - SIZE / 2.0;
+                double dy = y - SIZE / 2.0;
+                return dx * dx + dy * dy <= (SIZE / 2.0) * (SIZE / 2.0);
             }
         };
+
+        avatarLabel.setOpaque(false);
         avatarLabel.setPreferredSize(new Dimension(100, 100));
         panel.add(avatarLabel);
 
         return panel;
     }
+
 
     private JPanel createTextPanel() {
         JPanel panel = new JPanel();
@@ -101,7 +126,7 @@ public class SettingPanel extends JPanel {
         welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
         welcomeLabel.setForeground(new Color(33, 33, 33));
 
-        userNameLabel = new JLabel("Guest User");
+        userNameLabel = new JLabel(currentUser.getName());
         userNameLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         userNameLabel.setForeground(new Color(76, 175, 80));
 
@@ -124,7 +149,7 @@ public class SettingPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createGreetingMessage(User user) {
+    private JPanel createGreetingMessage() {
         JPanel container = new JPanel();
         container.setOpaque(false);
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
@@ -194,7 +219,7 @@ public class SettingPanel extends JPanel {
         return container;
     }
 
-    private JPanel createQuickStartSection(User user) {
+    private JPanel createQuickStartSection() {
         JPanel container = new JPanel();
         container.setOpaque(false);
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));

@@ -3,6 +3,7 @@ package main.com.pos.view.product;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,15 @@ public class ProductPanel extends JPanel {
     private final List<Product> allProducts;
     private JTable productTable;
     private DefaultTableModel tableModel;
+    private JPanel detailSidebar;
+    private JLabel productImageLabel;
+    private JLabel productNameLabel;
+    private JLabel productIdLabel;
+    private JLabel categoryLabel;
+    private JLabel priceLabel;
+    private JLabel stockLabel;
+    private JLabel statusLabel;
+    private JTextArea descriptionArea;
 
     public ProductPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -30,7 +40,14 @@ public class ProductPanel extends JPanel {
         allProducts = productDAO.getAll();
 
         add(createTopBar(), BorderLayout.NORTH);
-        add(createTable(), BorderLayout.CENTER);
+        
+        // Create main content panel with table and sidebar
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 0));
+        centerPanel.setOpaque(false);
+        centerPanel.add(createTable(), BorderLayout.CENTER);
+        centerPanel.add(createDetailSidebar(), BorderLayout.EAST);
+        
+        add(centerPanel, BorderLayout.CENTER);
     }
 
     /* ---------------- TOP BAR ---------------- */
@@ -91,7 +108,7 @@ public class ProductPanel extends JPanel {
         searchField.setForeground(new Color(60, 60, 60));
         searchField.setCaretColor(new Color(60, 60, 60));
         
-        // Placeholder text
+        // Placeholder text 
         searchField.setText("Search products...");
         searchField.setForeground(Color.GRAY);
         
@@ -127,14 +144,14 @@ public class ProductPanel extends JPanel {
             searchField.requestFocus();
         });
 
-        // Show/hide clear button based on text
+        // Show/hide clear button based on text and filter products
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { handleUpdateProduct(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filterProducts(searchField.getText()); }
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { handleDeleteProduct(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filterProducts(searchField.getText()); }
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { handleAddProduct(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filterProducts(searchField.getText()); }
         });
 
         searchPanel.add(searchIcon, BorderLayout.WEST);
@@ -187,7 +204,6 @@ public class ProductPanel extends JPanel {
             normalColor, Color.WHITE, 
             BorderFactory.createEmptyBorder(10, 20, 10, 20), 10, null);
         
-        // Add hover animation with smooth color transition
         button.addMouseListener(new MouseAdapter() {
             private Timer timer;
             private float opacity = 1.0f;
@@ -288,6 +304,18 @@ public class ProductPanel extends JPanel {
         productTable.getColumn("Price").setCellRenderer(new TableDesign.CurrencyRenderer());
         productTable.getColumn("Stock").setCellRenderer(new TableDesign.CenteredRenderer());
         productTable.getColumn("Status").setCellRenderer(new StockStatusRenderer());
+        
+        // Add mouse listener to show product details when row is clicked
+        productTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int selectedRow = productTable.getSelectedRow();
+                if (selectedRow >= 0) {
+                    Product selectedProduct = allProducts.get(selectedRow);
+                    displayProductDetails(selectedProduct);
+                }
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(productTable);
         scrollPane.setBackground(Color.WHITE);
@@ -306,7 +334,6 @@ public class ProductPanel extends JPanel {
             Product product = products.get(i);
             String categoryName = categoryMap.getOrDefault(product.getCategoryId(), "Unknown");
             String stockStatus = getStockStatus(product.getStockQuantity());
-            
             data[i][0] = product.getProductId();
             data[i][1] = product.getName();
             data[i][2] = categoryName;
@@ -381,15 +408,303 @@ public class ProductPanel extends JPanel {
         }
     }
 
-    private static void handleAddProduct() {
+    /* ---------------- FILTER PRODUCTS BY SEARCH QUERY ---------------- */
+    private void filterProducts(String query) {
+        if (query == null || query.isEmpty() || query.equals("Search products...")) {
+            refreshTable(allProducts);
+            return;
+        }
+        
+        List<Product> filteredProducts = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+        
+        for (Product product : allProducts) {
+            if (product.getName().toLowerCase().contains(lowerQuery) ||
+                String.valueOf(product.getProductId()).contains(lowerQuery)) {
+                filteredProducts.add(product);
+            }
+        }
+        
+        refreshTable(filteredProducts);
+    }
+
+    /* ---------------- REFRESH TABLE WITH NEW DATA ---------------- */
+    private void refreshTable(List<Product> products) {
+        Object[][] data = convertProductsToTableData(products);
+        tableModel.setRowCount(0);  // Clear existing rows
+        for (Object[] row : data) {
+            tableModel.addRow(row);
+        }
+    }
+
+    private void handleAddProduct() {
         System.out.println("Add Product button clicked");
     }
 
-    private static void handleUpdateProduct() {
+    private void handleUpdateProduct() {
         System.out.println("Update Product button clicked");
     }
 
-    private static void handleDeleteProduct() {
+    private void handleDeleteProduct() {
         System.out.println("Delete Product button clicked");
+    }
+    
+    /* ---------------- PRODUCT DETAIL SIDEBAR ---------------- */
+    private JPanel createDetailSidebar() {
+        detailSidebar = new JPanel(new BorderLayout());
+        detailSidebar.setBackground(new Color(249, 250, 251));
+        detailSidebar.setPreferredSize(new Dimension(350, 0));
+        detailSidebar.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(229, 231, 235)));
+        
+        // Header Panel with gradient
+        JPanel headerPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                GradientPaint gp = new GradientPaint(0, 0, new Color(59, 130, 246), 0, getHeight(), new Color(37, 99, 235));
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+            }
+        };
+        headerPanel.setPreferredSize(new Dimension(350, 60));
+        headerPanel.setLayout(new BorderLayout());
+        
+        JLabel titleLabel = new JLabel("Product Details");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+        
+        // Content Panel with ScrollPane
+        JPanel contentPanel = new JPanel();
+        contentPanel.setOpaque(false);
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // Product Image with modern rounded corners
+        productImageLabel = new JLabel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(getBackground());
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        productImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        productImageLabel.setPreferredSize(new Dimension(310, 200));
+        productImageLabel.setMaximumSize(new Dimension(310, 200));
+        productImageLabel.setBackground(Color.WHITE);
+        productImageLabel.setOpaque(false);
+        productImageLabel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(229, 231, 235), 1, true),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        contentPanel.add(productImageLabel);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        
+        // Info Card Panel
+        JPanel infoCard = createModernInfoCard();
+        contentPanel.add(infoCard);
+        
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        
+        detailSidebar.add(headerPanel, BorderLayout.NORTH);
+        detailSidebar.add(scrollPane, BorderLayout.CENTER);
+        
+        return detailSidebar;
+    }
+    
+    /* ---------------- CREATE MODERN INFO CARD ---------------- */
+    private JPanel createModernInfoCard() {
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(Color.WHITE);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2d.setColor(new Color(229, 231, 235));
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setOpaque(false);
+        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        card.setMaximumSize(new Dimension(310, 600));
+        
+        // Product Name (Prominent)
+        productNameLabel = new JLabel("Select a product");
+        productNameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        productNameLabel.setForeground(new Color(17, 24, 39));
+        productNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(productNameLabel);
+        card.add(Box.createRigidArea(new Dimension(0, 5)));
+        
+        // Product ID (subtle)
+        productIdLabel = new JLabel("ID: -");
+        productIdLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        productIdLabel.setForeground(new Color(107, 114, 128));
+        productIdLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(productIdLabel);
+        card.add(Box.createRigidArea(new Dimension(0, 20)));
+        
+        // Divider
+        JSeparator separator1 = new JSeparator();
+        separator1.setForeground(new Color(229, 231, 235));
+        separator1.setMaximumSize(new Dimension(270, 1));
+        separator1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(separator1);
+        card.add(Box.createRigidArea(new Dimension(0, 15)));
+        
+        // Category
+        card.add(createInfoRow("📦", "Category"));
+        categoryLabel = new JLabel("Not specified");
+        categoryLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        categoryLabel.setForeground(new Color(55, 65, 81));
+        categoryLabel.setBorder(BorderFactory.createEmptyBorder(3, 30, 0, 0));
+        categoryLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(categoryLabel);
+        card.add(Box.createRigidArea(new Dimension(0, 12)));
+        
+        // Price
+        card.add(createInfoRow("💰", "Price"));
+        priceLabel = new JLabel("$0.00");
+        priceLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        priceLabel.setForeground(new Color(34, 197, 94));
+        priceLabel.setBorder(BorderFactory.createEmptyBorder(3, 30, 0, 0));
+        priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(priceLabel);
+        card.add(Box.createRigidArea(new Dimension(0, 12)));
+        
+        // Stock
+        card.add(createInfoRow("📊", "Stock Level"));
+        stockLabel = new JLabel("0 units");
+        stockLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        stockLabel.setForeground(new Color(55, 65, 81));
+        stockLabel.setBorder(BorderFactory.createEmptyBorder(3, 30, 0, 0));
+        stockLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(stockLabel);
+        card.add(Box.createRigidArea(new Dimension(0, 12)));
+        
+        // Status Badge
+        card.add(createInfoRow("🔵", "Status"));
+        statusLabel = new JLabel("Unknown") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(getBackground());
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        statusLabel.setForeground(Color.WHITE);
+        statusLabel.setOpaque(false);
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JPanel statusWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 3));
+        statusWrapper.setOpaque(false);
+        statusWrapper.add(statusLabel);
+        statusWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(statusWrapper);
+        
+        return card;
+    }
+    
+    /* ---------------- CREATE INFO ROW WITH ICON ---------------- */
+    private JPanel createInfoRow(String emoji, String label) {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel iconLabel = new JLabel(emoji);
+        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+        iconLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+        
+        JLabel textLabel = new JLabel(label);
+        textLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        textLabel.setForeground(new Color(75, 85, 99));
+        
+        row.add(iconLabel);
+        row.add(textLabel);
+        
+        return row;
+    }
+    
+    /* ---------------- DISPLAY PRODUCT DETAILS IN SIDEBAR ---------------- */
+    private void displayProductDetails(Product product) {
+        if (product == null) return;
+        
+        // Load and display product image
+        String imagePath = product.getImage();
+        if (imagePath != null && !imagePath.isEmpty()) {
+            try {
+                Image img = UI.getImage(imagePath);
+                if (img != null) {
+                    ImageIcon imageIcon = new ImageIcon(img.getScaledInstance(290, 180, Image.SCALE_SMOOTH));
+                    productImageLabel.setIcon(imageIcon);
+                    productImageLabel.setText("");
+                } else {
+                    productImageLabel.setIcon(null);
+                    productImageLabel.setText("📷 No image available");
+                    productImageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                    productImageLabel.setForeground(new Color(156, 163, 175));
+                }
+            } catch (Exception e) {
+                productImageLabel.setIcon(null);
+                productImageLabel.setText("📷 Image not found");
+                productImageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                productImageLabel.setForeground(new Color(156, 163, 175));
+            }
+        } else {
+            productImageLabel.setIcon(null);
+            productImageLabel.setText("📷 No image");
+            productImageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            productImageLabel.setForeground(new Color(156, 163, 175));
+        }
+        
+        // Update product information
+        productNameLabel.setText(product.getName());
+        productIdLabel.setText("ID: #" + product.getProductId());
+        
+        Map<Integer, String> categoryMap = getCategoryMap();
+        categoryLabel.setText(categoryMap.getOrDefault(product.getCategoryId(), "Unknown"));
+        
+        priceLabel.setText(String.format("$%.2f", product.getPrice()));
+        stockLabel.setText(product.getStockQuantity() + " units available");
+        
+        // Update status with modern badge styling
+        String status;
+        Color statusBg;
+        if (product.getStockQuantity() == 0) {
+            status = "OUT OF STOCK";
+            statusBg = new Color(239, 68, 68);
+        } else if (product.getStockQuantity() < 10) {
+            status = "LOW STOCK";
+            statusBg = new Color(245, 158, 11);
+        } else {
+            status = "IN STOCK";
+            statusBg = new Color(34, 197, 94);
+        }
+        statusLabel.setText(status);
+        statusLabel.setBackground(statusBg);
+        
+        detailSidebar.revalidate();
+        detailSidebar.repaint();
     }
 }

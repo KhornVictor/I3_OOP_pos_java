@@ -57,4 +57,8 @@ public class Product {
                 ", image='" + image + '\'' +
                 '}';
     }
+
+    public Object getDescription() {
+        return null;
+    }
 }

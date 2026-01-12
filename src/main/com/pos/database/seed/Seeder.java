@@ -3,6 +3,8 @@ package main.com.pos.database.seed;
 import java.sql.*;
 import java.time.LocalDateTime;
 import main.com.pos.database.DBConnection;
+import main.com.pos.model.Address;
+import main.com.pos.model.Customer;
 import main.com.pos.util.Color;
 
 public class Seeder {
@@ -26,29 +28,61 @@ public class Seeder {
 
     // ================= USER =================
     private static void seedUsers(Connection connection) throws SQLException {
-        String sql = """
-            INSERT INTO User (Username, Password, Role, Name, Email, Image)
-            SELECT ?, ?, ?, ?, ?, ?
+        // Insert addresses first
+        String addressSql = """
+            INSERT INTO Address (Street, City, State, ZipCode, Country)
+            SELECT ?, ?, ?, ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM Address WHERE Street = ? AND City = ?
+            )
+        """;
+
+        Address[] addresses = {
+            new Address(1, "123 Main St", "Phnom Penh", "Phnom Penh", "12000", "Cambodia"),
+            new Address(2, "456 Second St", "Siem Reap", "Siem Reap", "17000", "Cambodia"),
+            new Address(3, "789 Third St", "Battambang", "Battambang", "02000", "Cambodia"),
+        };
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(addressSql)) {
+            for (Address address : addresses) {
+                preparedStatement.setString(1, address.getStreet());
+                preparedStatement.setString(2, address.getCity());
+                preparedStatement.setString(3, address.getState());
+                preparedStatement.setString(4, address.getZipCode());
+                preparedStatement.setString(5, address.getCountry());
+                preparedStatement.setString(6, address.getStreet());
+                preparedStatement.setString(7, address.getCity());
+                preparedStatement.addBatch();
+            }
+            preparedStatement.executeBatch();
+        }
+
+        // Then insert users with address references
+        String userSql = """
+            INSERT INTO User (Username, Password, Role, Name, Email, AddressID, Image)
+            SELECT ?, ?, ?, ?, ?, 
+                (SELECT AddressID FROM Address WHERE Street = ?), ?
             WHERE NOT EXISTS (
                 SELECT 1 FROM User WHERE Username = ?
             )
         """;
 
-        String[][] users = {
-            {"admin", "admin123", "admin", "System Admin", "admin@pos.com", "admin.png"},
-            {"cashier1", "cash123", "cashier", "Alice Smith", "alice@pos.com", "alice.png"},
-            {"cashier2", "cash123", "cashier", "Bob Johnson", "bob@pos.com", "bob.png"}
+        Object[][] users = {
+            {"victor", "123456", "admin", "Khorn Victor", "victor@gmail.com", "123 Main St", "images/avatar/victor.png"},
+            {"samnang", "123456", "admin", "Hour Samnang", "samnang@gmail.com", "456 Second St", "images/avatar/samnang.png"},
+            {"sonita", "123456", "cashier", "Nhean Sonita", "sonita@gmail.com", "789 Third St", "images/avatar/sonita.png"},
         };
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            for (String[] user : users) {
-                preparedStatement.setString(1, user[0]); // Username
-                preparedStatement.setString(2, user[1]); // Password
-                preparedStatement.setString(3, user[2]); // Role
-                preparedStatement.setString(4, user[3]); // Name
-                preparedStatement.setString(5, user[4]); // Email
-                preparedStatement.setString(6, user[5]); // Image
-                preparedStatement.setString(7, user[0]); // WHERE NOT EXISTS Username
+        try (PreparedStatement preparedStatement = connection.prepareStatement(userSql)) {
+            for (Object[] user : users) {
+                preparedStatement.setString(1, (String) user[0]); // Username
+                preparedStatement.setString(2, (String) user[1]); // Password
+                preparedStatement.setString(3, (String) user[2]); // Role
+                preparedStatement.setString(4, (String) user[3]); // Name
+                preparedStatement.setString(5, (String) user[4]); // Email
+                preparedStatement.setString(6, (String) user[5]); // AddressID lookup
+                preparedStatement.setString(7, (String) user[6]); // Image
+                preparedStatement.setString(8, (String) user[0]); // WHERE NOT EXISTS Username
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -58,25 +92,24 @@ public class Seeder {
     // ================= CUSTOMER =================
     private static void seedCustomers(Connection connection) throws SQLException {
         String sql = """
-            INSERT INTO Customer (Name, Email, Phone, Address)
-            SELECT ?, ?, ?, ?
+            INSERT INTO Customer (Name, Email, Phone)
+            SELECT ?, ?, ?
             WHERE NOT EXISTS (
                 SELECT 1 FROM Customer WHERE Name = ?
             )
         """;
 
-        String[][] customers = {
-            {"Walk-in Customer", null, null, null},
-            {"John Doe", "john@gmail.com", "012345678", "Phnom Penh"}
+        Customer[] customers = {
+            new Customer(1, "Walk-in Customer", null, null),
+            new Customer(2, "John Doe", "john@gmail.com", "012345678")
         };
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            for (String[] customer : customers) {
-                preparedStatement.setString(1, customer[0]);
-                preparedStatement.setString(2, customer[1]);
-                preparedStatement.setString(3, customer[2]);
-                preparedStatement.setString(4, customer[3]);
-                preparedStatement.setString(5, customer[0]); // check Name
+            for (Customer customer : customers) {
+                preparedStatement.setString(1, customer.getName());
+                preparedStatement.setString(2, customer.getEmail());
+                preparedStatement.setString(3, customer.getPhone());
+                preparedStatement.setString(4, customer.getName()); 
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -96,9 +129,9 @@ public class Seeder {
         String[] categories = {"Beverages", "Snacks", "Electronics"};
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            for (String name : categories) {
-                preparedStatement.setString(1, name);
-                preparedStatement.setString(2, name);
+            for (String category : categories) {
+                preparedStatement.setString(1, category);
+                preparedStatement.setString(2, category);
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -109,26 +142,27 @@ public class Seeder {
     private static void seedProducts(Connection connection) throws SQLException {
 
         String sql = """
-            INSERT INTO Product (Name, CategoryID, Price, Stock)
-            SELECT ?, (SELECT CategoryID FROM Category WHERE Name = ?), ?, ?
+            INSERT INTO Product (Name, CategoryID, Price, StockQuantity, Image)
+            SELECT ?, (SELECT CategoryID FROM Category WHERE Name = ?), ?, ?, ?
             WHERE NOT EXISTS (
                 SELECT 1 FROM Product WHERE Name = ?
             )
         """;
 
         Object[][] products = {
-            {"Coca Cola", "Beverages", 1.50, 100},
-            {"Chips", "Snacks", 2.00, 80},
-            {"USB Cable", "Electronics", 3.50, 50}
+            {"Coca Cola", "Beverages", 1.50, 100, "images/product/coca_cola.png"},
+            {"Chips", "Snacks", 2.00, 150, "images/product/chips.png"},
+            {"Smartphone", "Electronics", 300.00, 50, "images/product/smartphone.png"}
         };
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            for (Object[] p : products) {
-                preparedStatement.setString(1, (String) p[0]);
-                preparedStatement.setString(2, (String) p[1]);
-                preparedStatement.setBigDecimal(3, new java.math.BigDecimal(p[2].toString()));
-                preparedStatement.setInt(4, (int) p[3]);
-                preparedStatement.setString(5, (String) p[0]);
+            for (Object[] product : products) {
+                preparedStatement.setString(1, (String) product[0]); // Name
+                preparedStatement.setString(2, (String) product[1]); // Category name for lookup
+                preparedStatement.setDouble(3, (double) product[2]); // Price
+                preparedStatement.setInt(4, (int) product[3]); // StockQuantity
+                preparedStatement.setString(5, (String) product[4]); // Image
+                preparedStatement.setString(6, (String) product[0]); // Name for WHERE NOT EXISTS
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -139,11 +173,11 @@ public class Seeder {
     // ================= SALE =================
     private static int seedSales(Connection connection) throws SQLException {
         String sql = """
-            INSERT INTO Sale (DateTime, UserID, CustomerID, Total, Discount, PaymentType)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO Sale (SaleDate, UserID, CustomerID, Total, Discount, PaymentType)
+            VALUES (?, ?, ?, ?, ?, ?) 
         """;
 
-        Integer userId = getIdByValue(connection, "SELECT UserID FROM User WHERE Username = ?", "cashier1");
+        Integer userId = getIdByValue(connection, "SELECT UserID FROM User WHERE Username = ?", "sonita");
         Integer customerId = getIdByValue(connection, "SELECT CustomerID FROM Customer WHERE Name = ?", "Walk-in Customer");
         if (userId == null || customerId == null) throw new SQLException("Missing user or customer for sale seeding");
 
@@ -225,12 +259,12 @@ public class Seeder {
     private static void seedInventoryAdjustments(Connection connection) throws SQLException {
         String sql = """
             INSERT INTO InventoryAdjustment
-            (ProductID, DateTime, QuantityChanged, Reason, UserID)
+            (ProductID, AdjustmentDate, QuantityChange, Reason, UserID)
             VALUES (?, ?, ?, ?, ?)
         """;
 
         Integer productId = getIdByValue(connection, "SELECT ProductID FROM Product WHERE Name = ?", "Coca Cola");
-        Integer userId = getIdByValue(connection, "SELECT UserID FROM User WHERE Username = ?", "cashier1");
+        Integer userId = getIdByValue(connection, "SELECT UserID FROM User WHERE Username = ?", "sonita");
         if (productId == null || userId == null) throw new SQLException("Missing product or user for inventory adjustment");
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {

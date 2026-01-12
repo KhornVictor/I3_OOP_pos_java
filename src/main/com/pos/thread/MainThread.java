@@ -9,7 +9,6 @@ public class MainThread extends Thread {
 
     private final Thread[] threads = {
         new Thread(new DatabaseConnectionTask()),
-        new Thread(new RenderingGraphic()),
         new Thread(new LoginTask()),
         new Thread(new DownloadImage())
     };

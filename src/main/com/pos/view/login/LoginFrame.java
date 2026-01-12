@@ -21,7 +21,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
-import main.com.pos.build.ContentBuild;
+import main.com.pos.components.layout.Layout;
 import main.com.pos.components.ui.UI;
 import main.com.pos.components.ui.UI.ImageBackgroundPanel;
 import main.com.pos.controller.LoginController;
@@ -146,7 +146,7 @@ public class LoginFrame extends JFrame {
 
             if (authorizedUser != null) {
                 showErrorPanel(background, "Login successful! Redirecting...", true, new Color(34, 197, 94), new Color(34, 197, 94));
-                ContentBuild.build(authorizedUser);
+                new Layout(authorizedUser).setVisible(true);
                 dispose();
             } else {
                 txtPassword.setText("");

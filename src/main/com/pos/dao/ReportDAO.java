@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import main.com.pos.database.DBConnection;
+import main.com.pos.util.Color;
 
 public class ReportDAO {
 
@@ -21,7 +22,7 @@ public class ReportDAO {
                 }
             }
         } catch (SQLException error) {
-            System.out.println("❌ getTotalSalesForDay error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getTotalSalesForDay error: " + error.getMessage() + Color.RESET);
         }
         return 0.0;
     }
@@ -54,7 +55,7 @@ public class ReportDAO {
                 }
             }
         } catch (SQLException error) {
-            System.out.println("❌ getTotalTransactionsForDay error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getTotalTransactionsForDay error: " + error.getMessage() + Color.RESET);
         }
         return 0;
     }
@@ -70,7 +71,7 @@ public class ReportDAO {
                 }
             }
         } catch (SQLException error) {
-            System.out.println("❌ getAverageTransactionValue error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getAverageTransactionValue error: " + error.getMessage() + Color.RESET);
         }
         return 0.0;
     }
@@ -95,7 +96,7 @@ public class ReportDAO {
                 }
             }
         } catch (SQLException error) {
-            System.out.println("❌ getTotalDiscountsForDay error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getTotalDiscountsForDay error: " + error.getMessage() + Color.RESET);
         }
         return 0.0;
     }
@@ -112,7 +113,7 @@ public class ReportDAO {
                 }
             }
         } catch (SQLException error) {
-            System.out.println("❌ getPaymentTypeDistribution error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getPaymentTypeDistribution error: " + error.getMessage() + Color.RESET);
         }
         return distribution;
     }

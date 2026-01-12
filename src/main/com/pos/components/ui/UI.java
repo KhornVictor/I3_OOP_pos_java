@@ -69,6 +69,17 @@ public class UI extends JFrame {
         return card;
     }
 
+    public static Image getImage(String imagePath) {
+        try {
+            File file = new File("src/main/com/pos/resources/" + imagePath);
+            Image image = ImageIO.read(file);
+            return image;
+        } catch (IOException e) {
+            System.err.println("❌ Failed to load image: " + imagePath);
+        }
+        return null;    
+    }
+
     public static Image internetImage(String imageUrl) {
         try {
             Image image = ImageIO.read(new URL(imageUrl));

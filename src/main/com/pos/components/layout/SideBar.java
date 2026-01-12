@@ -17,7 +17,6 @@ import main.com.pos.components.ui.UI.SidebarMenuButton;
 import main.com.pos.model.User;
 import main.com.pos.view.dashboard.DashboardPanel;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
-import main.com.pos.view.pos.POSFrame;
 import main.com.pos.view.product.ProductPanel;
 import main.com.pos.view.setting.SettingPanel;
 
@@ -25,6 +24,7 @@ public class SideBar extends JPanel {
 
     public User user;
     private JButton activButton = null;
+    private final java.util.Map<String, SidebarMenuButton> menuButtons = new java.util.HashMap<>();
 
     public SideBar(User user, Navigation navigation, ContentPanel contentPanel) {
         this.user = user;
@@ -101,6 +101,11 @@ public class SideBar extends JPanel {
                 Color.WHITE, Color.BLACK,
                 new Color(255, 255, 255), new Color(226, 232, 240), new Color(59, 130, 246), new Color(37, 99, 235)
             );
+            
+            // Store button reference
+            String menuKey = item[1].trim();
+            menuButtons.put(menuKey, menuBtn);
+            
             if (item[1].equals("Dashboard")) {
                 activButton = menuBtn;
                 menuBtn.setActive(true);
@@ -119,29 +124,54 @@ public class SideBar extends JPanel {
                 
                 if (text.contains("dashboard")) {
                     contentPanel.removeAll();
-                    contentPanel.add(new DashboardPanel(), BorderLayout.CENTER);
+                    navigation.setTitle("Dashboard");
+                    contentPanel.add(new DashboardPanel(contentPanel, user, navigation, this), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
                 else if (text.contains("products")) {
                     contentPanel.removeAll();
+                    navigation.setTitle("Products");
                     contentPanel.add(new ProductPanel(), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
-                else if (text.contains("new sale")) new POSFrame(null).setVisible(true);
-                else if (text.contains("reports")) System.out.println("Reports menu clicked");
-                else if (text.contains("customers")) System.out.println("Customers menu clicked");
+                else if (text.contains("new sale")) {
+                    System.out.println("new sale menu clicked");
+                    navigation.setTitle("NewSale");
+                    contentPanel.removeAll();
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                }
+                else if (text.contains("reports")) {
+                    System.out.println("Reports menu clicked");
+                    navigation.setTitle("Reports");
+                    contentPanel.removeAll();
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                }
+                else if (text.contains("customers")) {
+                    System.out.println("Customers menu clicked");
+                    navigation.setTitle("Customers");
+                    contentPanel.removeAll();
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                }
                 else if (text.contains("inventory")){
                     System.out.println("Inventory menu clicked");
+                    navigation.setTitle("Inventory");
                     contentPanel.removeAll();
                     contentPanel.add(new InventoryDashboardPanel(), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
                 }
                 else if (text.contains("settings")) {
+                    System.out.println("Settings menu clicked");
+                    navigation.setTitle("Settings");
                     contentPanel.removeAll();
-                    contentPanel.add(new SettingPanel(), BorderLayout.CENTER);
+                    contentPanel.add(new SettingPanel(user), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
@@ -170,5 +200,16 @@ public class SideBar extends JPanel {
         logoutButton.setPreferredSize(new Dimension(240, 40));
         footerPanel.add(logoutButton);
         add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    public void activateMenu(String menuName) {
+        SidebarMenuButton targetButton = menuButtons.get(menuName);
+        if (targetButton != null && targetButton != activButton) {
+            if (activButton != null) {
+                ((SidebarMenuButton) activButton).setActive(false);
+            }
+            activButton = targetButton;
+            targetButton.setActive(true);
+        }
     }
 }

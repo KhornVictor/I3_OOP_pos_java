@@ -8,12 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 import main.com.pos.database.DBConnection;
 import main.com.pos.model.Product;
+import main.com.pos.util.Color;
 
 public class ProductDAO {
 
     public List<Product> getAll() {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock, Image FROM Product";
+        String sql = "SELECT ProductID, Name, CategoryID, Price, StockQuantity, Image FROM Product ORDER BY ProductID";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -21,7 +22,7 @@ public class ProductDAO {
                 products.add(mapRow(resultSet));
             }
         } catch (SQLException error) {
-            System.out.println("❌ getAll error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getAll product error: " + error.getMessage() + Color.RESET);
         }
         return products;
     }
@@ -35,7 +36,7 @@ public class ProductDAO {
                 if (resultSet.next()) return mapRow(resultSet);
             }
         } catch (SQLException error) {
-            System.out.println("❌ getById error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getById product error: " + error.getMessage() + Color.RESET);
         }
         return null;
     }
@@ -52,7 +53,7 @@ public class ProductDAO {
                 }
             }
         } catch (SQLException error) {
-            System.out.println("❌ getByCategory error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ getByCategory product error: " + error.getMessage() + Color.RESET);
         }
         return products;
     }
@@ -72,7 +73,7 @@ public class ProductDAO {
                 return true;
             }
         } catch (SQLException error) {
-            System.out.println("❌ create error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ create product error: " + error.getMessage() + Color.RESET);
         }
         return false;
     }
@@ -93,7 +94,7 @@ public class ProductDAO {
                 return true;
             }
         } catch (SQLException error) {
-            System.out.println("❌ update error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ update product error: " + error.getMessage() + Color.RESET);
         }
         return false;
     }
@@ -109,7 +110,7 @@ public class ProductDAO {
                 return true;
             }
         } catch (SQLException error) {
-            System.out.println("❌ delete error: " + error.getMessage());
+            System.out.println(Color.RED + "❌ delete product error: " + error.getMessage() + Color.RESET);
         }
         return false;
     }
@@ -122,7 +123,7 @@ public class ProductDAO {
             preparedStatement.setInt(2, productId);
             int affectedRows = preparedStatement.executeUpdate();
             return affectedRows > 0;
-        } catch (SQLException error) { System.out.println("❌ updateStock error: " + error.getMessage()); }
+        } catch (SQLException error) { System.out.println(Color.RED + "❌ updateStock product error: " + error.getMessage() + Color.RESET); }
         return false;
     }
 
@@ -131,7 +132,7 @@ public class ProductDAO {
         String name = resultSet.getString("Name");
         int categoryId = resultSet.getInt("CategoryID");
         double price = resultSet.getDouble("Price");
-        int stockQuantity = resultSet.getInt("Stock");
+        int stockQuantity = resultSet.getInt("StockQuantity");
         String image = resultSet.getString("Image");
         return new Product(productId, name, categoryId, price, stockQuantity, image);
     }
