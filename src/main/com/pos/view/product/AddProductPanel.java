@@ -9,6 +9,7 @@ import main.com.pos.dao.ProductDAO;
 import main.com.pos.model.Category;
 import main.com.pos.model.Product;
 import main.com.pos.util.DragDropImage;
+import main.com.pos.util.Telegram;
 
 public class AddProductPanel extends JPanel {
     
@@ -24,6 +25,7 @@ public class AddProductPanel extends JPanel {
     private JButton saveButton;
     private JButton cancelButton;
     private final JPanel formPanel;
+    private Runnable onProductAddedCallback;
 
     
     public AddProductPanel() {
@@ -38,6 +40,11 @@ public class AddProductPanel extends JPanel {
         add(createContentPanel(), BorderLayout.CENTER);
         
         add(createActionsPanel(), BorderLayout.SOUTH);
+    }
+    
+    /* ==================== SET CALLBACK ==================== */
+    public void setOnProductAddedCallback(Runnable callback) {
+        this.onProductAddedCallback = callback;
     }
     
     /* ==================== HEADER PANEL ==================== */
@@ -473,7 +480,17 @@ public class AddProductPanel extends JPanel {
             
             if (productController.addProduct(newProduct)) {
                 showSuccess("Product added successfully!");
+                Telegram.telegramSend(
+                    """
+                        \ud83d\uded2 New Product Added:\n
+                        Name: """ + newProduct.getName() + "\n" +
+                        "Category ID: " + newProduct.getCategoryId() + "\n" +
+                        "Price: $" + newProduct.getPrice() + "\n" +
+                        "Stock Quantity: " + newProduct.getStockQuantity() + "\n" +
+                        "Description: " + descriptionArea.getText()
+                    );
                 clearForm();
+                if (onProductAddedCallback != null)  onProductAddedCallback.run();
             } else  showError("Failed to add product. Please try again.");
         } catch (IllegalArgumentException e) {
             showError("Invalid input: " + e.getMessage());
@@ -482,13 +499,14 @@ public class AddProductPanel extends JPanel {
     
     /* ==================== CLEAR FORM ==================== */
     private void clearForm() {
-        if (nameField != null) nameField.setText("");
-        if (categoryCombo != null) categoryCombo.setSelectedIndex(0);
-        if (priceSpinner != null) priceSpinner.setValue(0.0);
-        if (stockSpinner != null) stockSpinner.setValue(0);
-        if (descriptionArea != null) descriptionArea.setText("");
-        if (imagePanel != null) imagePanel.repaint();
-        if (nameField != null) nameField.requestFocus();
+        nameField.setText("");
+        categoryCombo.setSelectedIndex(0);
+        priceSpinner.setValue(0.0);
+        stockSpinner.setValue(0);
+        descriptionArea.setText("");
+        imagePanel.resetImage();
+        imagePanel.repaint();
+        nameField.requestFocus();
     }
     
     /* ==================== SHOW MESSAGES ==================== */

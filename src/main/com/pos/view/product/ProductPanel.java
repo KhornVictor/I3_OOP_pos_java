@@ -12,9 +12,12 @@ import javax.swing.table.*;
 import main.com.pos.components.ui.TableDesign;
 import main.com.pos.components.ui.UI;
 import main.com.pos.controller.CategoryController;
+import main.com.pos.controller.ProductController;
 import main.com.pos.dao.ProductDAO;
 import main.com.pos.model.Category;
 import main.com.pos.model.Product;
+import main.com.pos.util.DeleteImage;
+import main.com.pos.util.Telegram;
 
 public class ProductPanel extends JPanel {
     
@@ -26,7 +29,9 @@ public class ProductPanel extends JPanel {
     private DefaultTableModel tableModel;
     private final ProductDetail productDetail;
     private final AddProductPanel addProductPanel;
+    private UpdatePanel updatePanel;
     private final JPanel centerPanel;
+    private Product selectedProduct;
 
     public ProductPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -48,6 +53,14 @@ public class ProductPanel extends JPanel {
         productDetail = new ProductDetail();
         centerPanel.add(productDetail, BorderLayout.EAST);
         addProductPanel = new AddProductPanel();
+        // Set callback to refresh table when product is added
+        addProductPanel.setOnProductAddedCallback(() -> {
+            allProducts.clear();
+            allProducts.addAll(productDAO.getAll());
+            currentFilteredProducts.clear();
+            currentFilteredProducts.addAll(allProducts);
+            refreshTable(currentFilteredProducts);
+        });
         add(centerPanel, BorderLayout.CENTER);
     }
 
@@ -324,7 +337,7 @@ public class ProductPanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = productTable.getSelectedRow();
                 if (selectedRow >= 0) {
-                    Product selectedProduct = allProducts.get(selectedRow);
+                    selectedProduct = currentFilteredProducts.get(selectedRow);
                     DetailView();
                     productDetail.displayProduct(selectedProduct);
                 }
@@ -411,6 +424,23 @@ public class ProductPanel extends JPanel {
         else return "In Stock";
     }
 
+    private void refreshProductList() {
+        allProducts.clear();
+        allProducts.addAll(productDAO.getAll());
+        currentFilteredProducts.clear();
+        currentFilteredProducts.addAll(allProducts);
+        refreshTable(currentFilteredProducts);
+        // Update the selected product reference
+        if (selectedProduct != null) {
+            for (Product p : allProducts) {
+                if (p.getProductId() == selectedProduct.getProductId()) {
+                    selectedProduct = p;
+                    break;
+                }
+            }
+        }
+    }
+
     /* ---------------- STOCK STATUS RENDERER (Color-Coded Badges) ---------------- */
     private class StockStatusRenderer extends DefaultTableCellRenderer {
         @Override
@@ -482,16 +512,103 @@ public class ProductPanel extends JPanel {
     }
 
     private void handleAddProduct() {
-        System.out.println("Add Product button clicked");
         AddProductView();
     }
 
     private void handleUpdateProduct() {
-        System.out.println("Update Product button clicked");
+        if (selectedProduct == null) {
+            JOptionPane.showMessageDialog(this, "Please select a product from the table first.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        UpdateProductView(selectedProduct);
     }
 
     private void handleDeleteProduct() {
-        System.out.println("Delete Product button clicked");
+        
+        // Check if a product is selected
+        if (selectedProduct == null) {
+            JOptionPane.showMessageDialog(this, 
+                "Please select a product from the table first.", 
+                "No Product Selected", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Get category name for display
+        Map<Integer, String> categoryMap = getCategoryMap();
+        String categoryName = categoryMap.getOrDefault(selectedProduct.getCategoryId(), "Unknown");
+        
+        // Create detailed confirmation message
+        String message = String.format("""
+                                       Are you sure you want to delete this product?
+                                       
+                                       Product ID: %d
+                                       Name: %s
+                                       Category: %s
+                                       Price: $%.2f
+                                       Stock: %d units
+                                       
+                                       This action cannot be undone!""",
+            selectedProduct.getProductId(),
+            selectedProduct.getName(),
+            categoryName,
+            selectedProduct.getPrice(),
+            selectedProduct.getStockQuantity()
+        );
+        
+        // Show confirmation dialog
+        int choice = JOptionPane.showConfirmDialog(
+            this,
+            message,
+            "Confirm Delete Product",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+        
+        // If user confirmed deletion
+        if (choice == JOptionPane.YES_OPTION) {
+            ProductController productController = new ProductController();
+            
+            // Attempt to delete the product
+            if (productController.deleteProduct(selectedProduct.getProductId())) {
+
+
+
+                DeleteImage.deleteImage(selectedProduct.getImage());
+
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Product deleted successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+
+                Telegram.telegramSend(
+                    """
+                    \u26A0\ufe0f Product Deleted:\n
+                    Product ID: """ + selectedProduct.getProductId() + "\n" +
+                    "Name: " + selectedProduct.getName() + "\n" +
+                    "Category: " + categoryName + "\n" +
+                    "Price: $" + selectedProduct.getPrice() + "\n" +
+                    "Stock: " + selectedProduct.getStockQuantity() + " units" 
+                );
+                
+                // Refresh the product list
+                refreshProductList();
+                
+                // Clear selection and hide detail panel
+                selectedProduct = null;
+                productTable.clearSelection();
+                
+            } else {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to delete product. Please try again.",
+                    "Delete Failed",
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
     }
     
     /* ---------------- SWITCH BETWEEN ADD PRODUCT AND DETAIL VIEW ---------------- */
@@ -504,7 +621,33 @@ public class ProductPanel extends JPanel {
     
     private void DetailView() {
         centerPanel.remove(addProductPanel);
+        if (updatePanel != null) {
+            centerPanel.remove(updatePanel);
+        }
         centerPanel.add(productDetail, BorderLayout.EAST);
+        centerPanel.revalidate();
+        centerPanel.repaint();
+    }
+
+    private void UpdateProductView(Product productToUpdate) {
+        centerPanel.remove(productDetail);
+        centerPanel.remove(addProductPanel);
+        
+        // Create or reuse update panel
+        if (updatePanel == null) {
+            updatePanel = new UpdatePanel();
+            updatePanel.setOnProductUpdatedCallback(() -> {
+                refreshProductList();
+                // Show detail view after successful update
+                if (selectedProduct != null) {
+                    DetailView();
+                    productDetail.displayProduct(selectedProduct);
+                }
+            });
+        }
+        
+        updatePanel.setProduct(productToUpdate);
+        centerPanel.add(updatePanel, BorderLayout.EAST);
         centerPanel.revalidate();
         centerPanel.repaint();
     }
