@@ -21,7 +21,7 @@ Thumbs.db
 # Local environment
 .env
 
-# Dependency caches
+# Dependency cachesq
 .gradle/
 
 # Application resources to keep local only
