@@ -149,6 +149,7 @@ public class DBInitializer {
                     ) ENGINE=InnoDB; 
                 """
             );
+            
 
             System.out.println("🍀 Database initialized successfully.");
         } catch (SQLException e) {
