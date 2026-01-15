@@ -74,4 +74,12 @@ public class UserDAO {
 		user.setImage(resultSet.getString("Image"));
 		return user;
 	}
+
+    public static void displayUser(User selectedUser) {
+        throw new UnsupportedOperationException("Unimplemented method 'displayUser'");
+    }
+
+    public static User getEmptyUser() {
+        throw new UnsupportedOperationException("Unimplemented method 'getEmptyUser'");
+    }
 }

@@ -9,7 +9,7 @@ import javax.swing.table.JTableHeader;
  * Professional table styling utility for POS application.
  * Provides modern, clean table designs with custom headers, rows, and alternating colors.
  */
-public class TableDesign {
+public class TableProduct {
 
     // Color constants
     public static final Color HEADER_BG = new Color(45, 52, 71);

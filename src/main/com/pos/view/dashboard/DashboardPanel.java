@@ -12,6 +12,7 @@ import main.com.pos.model.User;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
 import main.com.pos.view.product.ProductPanel;
 import main.com.pos.view.setting.SettingPanel;
+import main.com.pos.view.user.UserPanel;
 
 public class DashboardPanel extends JPanel {
 
@@ -69,10 +70,10 @@ public class DashboardPanel extends JPanel {
                 handleActionCardClick("Inventory");
             }
         }));
-        grid.add(UI.actionCardWithImage("Customers", "View customer database", "images/cards/dashboard/CustomersCard.png", "images/icons/dashboard/actions/Customers.png", new java.awt.event.MouseAdapter() {
+        grid.add(UI.actionCardWithImage("Users", "View customer database", "images/cards/dashboard/CustomersCard.png", "images/icons/dashboard/actions/Customers.png", new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                handleActionCardClick("Customers");
+                handleActionCardClick("Users");
             }
         }));
         grid.add(UI.actionCardWithImage("Reports", "View sales analytics", "images/cards/dashboard/ReportsCard.png", "images/icons/dashboard/actions/Reports.png", new java.awt.event.MouseAdapter() {
@@ -120,12 +121,12 @@ public class DashboardPanel extends JPanel {
                 contentPanel.revalidate();
                 contentPanel.repaint();
             }
-            case "Customers" -> {
-                System.out.println("Customers action triggered.");
-                sideBar.activateMenu("Customers");
-                navigation.setTitle("Customers");
+            case "Users" -> {
+                System.out.println("Users action triggered.");
+                sideBar.activateMenu("Users");
+                navigation.setTitle("Users");
                 contentPanel.removeAll();
-                // Add Customers panel here when available
+                contentPanel.add(new UserPanel(), BorderLayout.CENTER);
                 contentPanel.revalidate();
                 contentPanel.repaint();
             }

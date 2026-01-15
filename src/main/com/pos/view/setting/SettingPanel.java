@@ -27,7 +27,6 @@ public class SettingPanel extends JPanel {
 
         add(createWelcomeSection(), BorderLayout.NORTH);
         add(createGreetingMessage(), BorderLayout.CENTER);
-        add(createQuickStartSection(), BorderLayout.SOUTH);
     }
 
     private JPanel createWelcomeSection() {
@@ -181,94 +180,9 @@ public class SettingPanel extends JPanel {
 
         container.add(greetingCard);
         container.add(Box.createVerticalStrut(20));
-
-        // Tips section
-        JPanel tipsPanel = createTipsSection();
-        container.add(tipsPanel);
-
         return container;
     }
 
-    private JPanel createTipsSection() {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-
-        JLabel tipsTitle = new JLabel("💡 Quick Tips");
-        tipsTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        tipsTitle.setForeground(new Color(33, 33, 33));
-
-        String[] tips = {
-            "• Use the Dashboard to view key metrics and statistics",
-            "• Navigate to POS for quick transactions",
-            "• Check Inventory to manage stock levels",
-            "• Review Reports for sales analytics"
-        };
-
-        container.add(tipsTitle);
-        container.add(Box.createVerticalStrut(10));
-
-        for (String tip : tips) {
-            JLabel tipLabel = new JLabel(tip);
-            tipLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tipLabel.setForeground(new Color(117, 117, 117));
-            container.add(tipLabel);
-            container.add(Box.createVerticalStrut(5));
-        }
-
-        return container;
-    }
-
-    private JPanel createQuickStartSection() {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        container.setBorder(new EmptyBorder(30, 0, 0, 0));
-
-        JLabel quickStartLabel = new JLabel("Quick Start");
-        quickStartLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        quickStartLabel.setForeground(new Color(33, 33, 33));
-
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 15, 0));
-        buttonPanel.setOpaque(false);
-        buttonPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
-
-        buttonPanel.add(createQuickButton("New Sale", new Color(76, 175, 80)));
-        buttonPanel.add(createQuickButton("View Inventory", new Color(33, 150, 243)));
-        buttonPanel.add(createQuickButton("Reports", new Color(255, 152, 0)));
-        buttonPanel.add(createQuickButton("Settings", new Color(156, 39, 176)));
-
-        container.add(quickStartLabel);
-        container.add(buttonPanel);
-
-        return container;
-    }
-
-    private JButton createQuickButton(String text, Color bgColor) {
-        JButton button = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                g2d.setColor(bgColor);
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-
-                g2d.setColor(Color.WHITE);
-                g2d.setFont(new Font("Segoe UI", Font.BOLD, 13));
-                FontMetrics fm = g2d.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
-                int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
-                g2d.drawString(getText(), x, y);
-            }
-        };
-        button.setPreferredSize(new Dimension(120, 45));
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return button;
-    }
 
     private JPanel createRoundedCard(Color fillColor, Color strokeColor, int radius) {
         return new JPanel() {

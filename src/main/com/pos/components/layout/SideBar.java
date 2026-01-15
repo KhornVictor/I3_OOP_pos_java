@@ -19,6 +19,7 @@ import main.com.pos.view.dashboard.DashboardPanel;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
 import main.com.pos.view.product.ProductPanel;
 import main.com.pos.view.setting.SettingPanel;
+import main.com.pos.view.user.UserPanel;
 
 public class SideBar extends JPanel {
 
@@ -90,7 +91,7 @@ public class SideBar extends JPanel {
             {"https://cdn-icons-png.flaticon.com/512/5581/5581393.png", " Dashboard"},
             {"https://cdn-icons-png.freepik.com/512/7835/7835563.png", " New Sale"},
             {"https://images.emojiterra.com/google/noto-emoji/unicode-15/color/512px/1f4e6.png", " Products"},
-            {"https://images.emojiterra.com/google/android-12l/512px/1f465.png", " Customers"},
+            {"https://images.emojiterra.com/google/android-12l/512px/1f465.png", " Users"},
             {"https://cdn-icons-png.flaticon.com/512/1966/1966114.png", " Inventory"},
             {"https://cdn-icons-png.flaticon.com/512/6005/6005505.png", " Reports"},
             {"https://icons.iconarchive.com/icons/grafikartes/flat-retro-modern/512/settings-icon.png", " Settings"}
@@ -150,10 +151,11 @@ public class SideBar extends JPanel {
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
-                else if (text.contains("customers")) {
-                    System.out.println("Customers menu clicked");
-                    navigation.setTitle("Customers");
+                else if (text.contains("users")) {
+                    System.out.println("Users menu clicked");
+                    navigation.setTitle("Users");
                     contentPanel.removeAll();
+                    contentPanel.add(new UserPanel(), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }

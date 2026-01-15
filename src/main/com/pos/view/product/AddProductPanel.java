@@ -45,7 +45,7 @@ public class AddProductPanel extends JPanel {
     /* ==================== SET CALLBACK ==================== */
     public void setOnProductAddedCallback(Runnable callback) {
         this.onProductAddedCallback = callback;
-    }
+    }   
     
     /* ==================== HEADER PANEL ==================== */
     private JPanel createHeaderPanel() {
