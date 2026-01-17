@@ -3,37 +3,65 @@ package main.com.pos.view.product;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.*;
 import javax.swing.table.*;
-import main.com.pos.components.ui.TableDesign;
+import main.com.pos.components.ui.TableProduct;
 import main.com.pos.components.ui.UI;
+import main.com.pos.controller.CategoryController;
+import main.com.pos.controller.ProductController;
 import main.com.pos.dao.ProductDAO;
+import main.com.pos.model.Category;
 import main.com.pos.model.Product;
+import main.com.pos.util.DeleteImage;
+import main.com.pos.util.Telegram;
 
 public class ProductPanel extends JPanel {
     
     private final ProductDAO productDAO;
+    private final CategoryController categoryController;
     private final List<Product> allProducts;
+    private List<Product> currentFilteredProducts;
     private JTable productTable;
     private DefaultTableModel tableModel;
+    private final ProductDetail productDetail;
+    private final AddProductPanel addProductPanel;
+    private UpdatePanel updatePanel;
+    private final JPanel centerPanel;
+    private Product selectedProduct;
 
     public ProductPanel() {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         setBackground(new Color(245, 247, 250));
         
-        // Initialize ProductDAO
         productDAO = new ProductDAO();
+        categoryController = new CategoryController();
         allProducts = productDAO.getAll();
+        currentFilteredProducts = new ArrayList<>(allProducts);
 
         add(createTopBar(), BorderLayout.NORTH);
-        add(createTable(), BorderLayout.CENTER);
+        
+        centerPanel = new JPanel(new BorderLayout(10, 0));
+        centerPanel.setOpaque(false);
+        centerPanel.add(createTable(), BorderLayout.CENTER);
+        productDetail = new ProductDetail();
+        centerPanel.add(productDetail, BorderLayout.EAST);
+        addProductPanel = new AddProductPanel();
+
+        addProductPanel.setOnProductAddedCallback(() -> {
+            allProducts.clear();
+            allProducts.addAll(productDAO.getAll());
+            currentFilteredProducts.clear();
+            currentFilteredProducts.addAll(allProducts);
+            refreshTable(currentFilteredProducts);
+        });
+        add(centerPanel, BorderLayout.CENTER);
     }
 
-    /* ---------------- TOP BAR ---------------- */
     private JPanel createTopBar() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(new Color(245, 247, 250));
@@ -45,16 +73,31 @@ public class ProductPanel extends JPanel {
             new String[]{"All Status", "Published", "Draft", "Inactive", "Stock Out"}
         );
         left.add(statusBox);
-        
 
-        JComboBox<String> categoryBox = createStyledComboBox(
-            new String[]{"All Categories", "Sunglass", "Clothes", "Beauty", "Cap", "Shoes", "Electronic", "Watch"}
-        );
+        JComboBox<String> categoryBox = createStyledComboBox(buildCategoryOptions());
+        categoryBox.addActionListener(e -> filterByCategory(categoryBox.getSelectedItem().toString()));
         left.add(categoryBox);
 
-        JButton deleteButton = createAnimatedButton("Delete", new Color(255, 90, 90), new Color(220, 50, 50));
-        JButton updateButton = createAnimatedButton("Update", new Color(100, 149, 237), new Color(70, 119, 207));
-        JButton addButton = createAnimatedButton("Add Product", new Color(34, 139, 34), new Color(24, 109, 24));
+        JButton deleteButton = createAnimatedButton("Delete", new Color(255, 90, 90), new Color(220, 50, 50), new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handleDeleteProduct();
+            }
+        });
+
+        JButton updateButton = createAnimatedButton("Update", new Color(100, 149, 237), new Color(70, 119, 207), new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handleUpdateProduct();
+            }
+        });
+
+        JButton addButton = createAnimatedButton("Add Product", new Color(34, 139, 34), new Color(24, 109, 24), new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handleAddProduct();
+            }
+        });
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         right.setBackground(new Color(245, 247, 250));
@@ -76,14 +119,13 @@ public class ProductPanel extends JPanel {
             BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true),
             BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
+
         searchPanel.setPreferredSize(new Dimension(280, 38));
 
-        // Search Icon
         JLabel searchIcon = new JLabel("🔍");
         searchIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
         searchIcon.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
 
-        // Search TextField
         JTextField searchField = new JTextField();
         searchField.setFont(new Font("Arial", Font.PLAIN, 13));
         searchField.setBorder(BorderFactory.createEmptyBorder());
@@ -91,7 +133,6 @@ public class ProductPanel extends JPanel {
         searchField.setForeground(new Color(60, 60, 60));
         searchField.setCaretColor(new Color(60, 60, 60));
         
-        // Placeholder text
         searchField.setText("Search products...");
         searchField.setForeground(Color.GRAY);
         
@@ -126,15 +167,13 @@ public class ProductPanel extends JPanel {
             searchField.setText("");
             searchField.requestFocus();
         });
-
-        // Show/hide clear button based on text
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { handleUpdateProduct(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filterProducts(searchField.getText()); }
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { handleDeleteProduct(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filterProducts(searchField.getText()); }
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { handleAddProduct(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filterProducts(searchField.getText()); }
         });
 
         searchPanel.add(searchIcon, BorderLayout.WEST);
@@ -144,7 +183,6 @@ public class ProductPanel extends JPanel {
         return searchPanel;
     }
 
-    /* ---------------- STYLED COMBOBOX ---------------- */
     private JComboBox<String> createStyledComboBox(String[] items) {
         JComboBox<String> comboBox = new JComboBox<>(items);
         comboBox.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -155,7 +193,6 @@ public class ProductPanel extends JPanel {
         comboBox.setFocusable(true);
         comboBox.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Custom renderer for dropdown items
         comboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, 
@@ -181,25 +218,20 @@ public class ProductPanel extends JPanel {
         return comboBox;
     }
 
-    /* ---------------- ANIMATED BUTTON ---------------- */
-    private JButton createAnimatedButton(String text, Color normalColor, Color hoverColor) {
+    private JButton createAnimatedButton(String text, Color normalColor, Color hoverColor, MouseAdapter clickHandler) {
         JButton button = UI.setButton(text, new Font("Arial", Font.BOLD, 12), 
             normalColor, Color.WHITE, 
             BorderFactory.createEmptyBorder(10, 20, 10, 20), 10, null);
         
-        // Add hover animation with smooth color transition
         button.addMouseListener(new MouseAdapter() {
             private Timer timer;
             private float opacity = 1.0f;
             
             @Override
             public void mouseEntered(MouseEvent e) {
-                // Stop any existing timer
-                if (timer != null && timer.isRunning()) {
-                    timer.stop();
-                }
+        
+                if (timer != null && timer.isRunning())  timer.stop();
                 
-                // Smooth transition to hover color
                 timer = new Timer(10, event -> {
                     opacity -= 0.05f;
                     if (opacity <= 0) {
@@ -207,7 +239,6 @@ public class ProductPanel extends JPanel {
                         timer.stop();
                         button.setBackground(hoverColor);
                     } else {
-                        // Interpolate between colors
                         int r = (int)(normalColor.getRed() * opacity + hoverColor.getRed() * (1 - opacity));
                         int g = (int)(normalColor.getGreen() * opacity + hoverColor.getGreen() * (1 - opacity));
                         int b = (int)(normalColor.getBlue() * opacity + hoverColor.getBlue() * (1 - opacity));
@@ -215,19 +246,13 @@ public class ProductPanel extends JPanel {
                     }
                 });
                 timer.start();
-                
-                // Scale up effect
                 button.setCursor(new Cursor(Cursor.HAND_CURSOR));
             }
             
             @Override
             public void mouseExited(MouseEvent e) {
-                // Stop any existing timer
-                if (timer != null && timer.isRunning()) {
-                    timer.stop();
-                }
+                if (timer != null && timer.isRunning()) timer.stop();
                 
-                // Smooth transition back to normal color
                 timer = new Timer(10, event -> {
                     opacity += 0.05f;
                     if (opacity >= 1.0f) {
@@ -235,7 +260,6 @@ public class ProductPanel extends JPanel {
                         timer.stop();
                         button.setBackground(normalColor);
                     } else {
-                        // Interpolate between colors
                         int r = (int)(hoverColor.getRed() * (1 - opacity) + normalColor.getRed() * opacity);
                         int g = (int)(hoverColor.getGreen() * (1 - opacity) + normalColor.getGreen() * opacity);
                         int b = (int)(hoverColor.getBlue() * (1 - opacity) + normalColor.getBlue() * opacity);
@@ -247,7 +271,6 @@ public class ProductPanel extends JPanel {
             
             @Override
             public void mousePressed(MouseEvent e) {
-                // Darken color on press
                 Color pressedColor = new Color(
                     Math.max(0, hoverColor.getRed() - 30),
                     Math.max(0, hoverColor.getGreen() - 30),
@@ -258,17 +281,20 @@ public class ProductPanel extends JPanel {
             
             @Override
             public void mouseReleased(MouseEvent e) {
-                // Return to hover color on release
                 if (button.contains(e.getPoint())) {
                     button.setBackground(hoverColor);
                 }
+            }
+            
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (clickHandler != null)  clickHandler.mouseClicked(e);
             }
         });
         
         return button;
     }
 
-    /* ---------------- TABLE ---------------- */
     private JScrollPane createTable() {
         String[] columns = {"Product ID", "Product Name", "Category", "Stock", "Status", "Price"};
         Object[][] data = convertProductsToTableData(allProducts);
@@ -280,14 +306,24 @@ public class ProductPanel extends JPanel {
 
         productTable = new JTable(tableModel);
         
-        // Apply modern styling
-        TableDesign.styleTable(productTable);
+        TableProduct.styleTable(productTable);
         productTable.setRowHeight(35);
         
-        // Apply specific renderers for columns
-        productTable.getColumn("Price").setCellRenderer(new TableDesign.CurrencyRenderer());
-        productTable.getColumn("Stock").setCellRenderer(new TableDesign.CenteredRenderer());
+        productTable.getColumn("Price").setCellRenderer(new TableProduct.CurrencyRenderer());
+        productTable.getColumn("Stock").setCellRenderer(new TableProduct.CenteredRenderer());
         productTable.getColumn("Status").setCellRenderer(new StockStatusRenderer());
+        
+        productTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int selectedRow = productTable.getSelectedRow();
+                if (selectedRow >= 0) {
+                    selectedProduct = currentFilteredProducts.get(selectedRow);
+                    DetailView();
+                    productDetail.displayProduct(selectedProduct);
+                }
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(productTable);
         scrollPane.setBackground(Color.WHITE);
@@ -295,9 +331,7 @@ public class ProductPanel extends JPanel {
         return scrollPane;
     }
 
-    /* ---------------- CONVERT PRODUCTS TO TABLE DATA ---------------- */
     private Object[][] convertProductsToTableData(List<Product> products) {
-        // Create a mapping for category IDs to category names
         Map<Integer, String> categoryMap = getCategoryMap();
         
         Object[][] data = new Object[products.size()][6];
@@ -306,33 +340,58 @@ public class ProductPanel extends JPanel {
             Product product = products.get(i);
             String categoryName = categoryMap.getOrDefault(product.getCategoryId(), "Unknown");
             String stockStatus = getStockStatus(product.getStockQuantity());
-            
             data[i][0] = product.getProductId();
             data[i][1] = product.getName();
             data[i][2] = categoryName;
             data[i][3] = product.getStockQuantity();
-            data[i][4] = stockStatus;  // Derived attribute: Stock Status
+            data[i][4] = stockStatus; 
             data[i][5] = "$" + String.format("%.2f", product.getPrice());
         }
         
         return data;
     }
 
-    /* ---------------- GET CATEGORY MAP (Category ID to Name) ---------------- */
+    private String[] buildCategoryOptions() {
+        List<Category> categories = categoryController.getAllCategories();
+        String[] options = new String[categories.size() + 1];
+        options[0] = "All Categories";
+        
+        for (int i = 0; i < categories.size(); i++) {
+            options[i + 1] = categories.get(i).getName();
+        }
+        
+        return options;
+    }
+
     private Map<Integer, String> getCategoryMap() {
         Map<Integer, String> categoryMap = new HashMap<>();
-        // Mapping category IDs to names (adjust based on your database)
-        categoryMap.put(1, "Sunglass");
-        categoryMap.put(2, "Clothes");
-        categoryMap.put(3, "Beauty");
-        categoryMap.put(4, "Cap");
-        categoryMap.put(5, "Shoes");
-        categoryMap.put(6, "Electronic");
-        categoryMap.put(7, "Watch");
+        List<Category> categories = categoryController.getAllCategories();
+        
+        for (Category category : categories) {
+            categoryMap.put(category.getCategoryId(), category.getName());
+        }
+        
         return categoryMap;
     }
 
-    /* ---------------- GET STOCK STATUS ---------------- */
+    private void filterByCategory(String categoryName) {
+        if (categoryName.equals("All Categories")) {
+            currentFilteredProducts = new ArrayList<>(allProducts);
+        } else {
+            currentFilteredProducts = new ArrayList<>();
+            Map<Integer, String> categoryMap = getCategoryMap();
+            
+            for (Product product : allProducts) {
+                String productCategory = categoryMap.get(product.getCategoryId());
+                if (categoryName.equals(productCategory)) {
+                    currentFilteredProducts.add(product);
+                }
+            }
+        }
+        
+        refreshTable(currentFilteredProducts);
+    }
+
     private String getStockStatus(int quantity) {
         if (quantity == 0) return "Out of Stock";
         else if (quantity < 50) return "Low Stock";
@@ -340,7 +399,22 @@ public class ProductPanel extends JPanel {
         else return "In Stock";
     }
 
-    /* ---------------- STOCK STATUS RENDERER (Color-Coded Badges) ---------------- */
+    private void refreshProductList() {
+        allProducts.clear();
+        allProducts.addAll(productDAO.getAll());
+        currentFilteredProducts.clear();
+        currentFilteredProducts.addAll(allProducts);
+        refreshTable(currentFilteredProducts);
+        if (selectedProduct != null) {
+            for (Product p : allProducts) {
+                if (p.getProductId() == selectedProduct.getProductId()) {
+                    selectedProduct = p;
+                    break;
+                }
+            }
+        }
+    }
+
     private class StockStatusRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
@@ -352,7 +426,6 @@ public class ProductPanel extends JPanel {
             label.setHorizontalAlignment(CENTER);
             label.setFont(new Font("Arial", Font.BOLD, 12));
             label.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-              // Set colors based on status (Derived attribute color coding)
             switch (status) {
                 case "Out of Stock" -> {
                     label.setBackground(new Color(255, 102, 102)); 
@@ -381,15 +454,156 @@ public class ProductPanel extends JPanel {
         }
     }
 
-    private static void handleAddProduct() {
-        System.out.println("Add Product button clicked");
+    private void filterProducts(String query) {
+        if (query == null || query.isEmpty() || query.equals("Search products...")) {
+            refreshTable(currentFilteredProducts);
+            return;
+        }
+        
+        List<Product> filteredProducts = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+        
+        for (Product product : currentFilteredProducts) {
+            if (product.getName().toLowerCase().contains(lowerQuery) ||
+                String.valueOf(product.getProductId()).contains(lowerQuery)) {
+                filteredProducts.add(product);
+            }
+        }
+        
+        refreshTable(filteredProducts);
     }
 
-    private static void handleUpdateProduct() {
-        System.out.println("Update Product button clicked");
+    private void refreshTable(List<Product> products) {
+        Object[][] data = convertProductsToTableData(products);
+        tableModel.setRowCount(0); 
+        for (Object[] row : data) {
+            tableModel.addRow(row);
+        }
     }
 
-    private static void handleDeleteProduct() {
-        System.out.println("Delete Product button clicked");
+    private void handleAddProduct() {
+        AddProductView();
+    }
+
+    private void handleUpdateProduct() {
+        if (selectedProduct == null) {
+            JOptionPane.showMessageDialog(this, "Please select a product from the table first.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        UpdateProductView(selectedProduct);
+    }
+
+    private void handleDeleteProduct() {
+        
+        if (selectedProduct == null) {
+            JOptionPane.showMessageDialog(this, 
+                "Please select a product from the table first.", 
+                "No Product Selected", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        Map<Integer, String> categoryMap = getCategoryMap();
+        String categoryName = categoryMap.getOrDefault(selectedProduct.getCategoryId(), "Unknown");
+        
+        String message = String.format("""
+                                       Are you sure you want to delete this product?
+                                       
+                                       Product ID: %d
+                                       Name: %s
+                                       Category: %s
+                                       Price: $%.2f
+                                       Stock: %d units
+                                       
+                                       This action cannot be undone!""",
+            selectedProduct.getProductId(),
+            selectedProduct.getName(),
+            categoryName,
+            selectedProduct.getPrice(),
+            selectedProduct.getStockQuantity()
+        );
+        
+        int choice = JOptionPane.showConfirmDialog(
+            this,
+            message,
+            "Confirm Delete Product",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+        
+        if (choice == JOptionPane.YES_OPTION) {
+            ProductController productController = new ProductController();
+            
+            if (productController.deleteProduct(selectedProduct.getProductId())) {
+                DeleteImage.deleteImage(selectedProduct.getImage());
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Product deleted successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+                Telegram.telegramSend(
+                    """
+                    \u26A0\ufe0f Product Deleted:\n
+                    Product ID: """ + selectedProduct.getProductId() + "\n" +
+                    "Name: " + selectedProduct.getName() + "\n" +
+                    "Category: " + categoryName + "\n" +
+                    "Price: $" + selectedProduct.getPrice() + "\n" +
+                    "Stock: " + selectedProduct.getStockQuantity() + " units" 
+                );
+                refreshProductList();
+                selectedProduct = null;
+                productTable.clearSelection();
+                
+            } else {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to delete product. Please try again.",
+                    "Delete Failed",
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+    
+    /* ---------------- SWITCH BETWEEN ADD PRODUCT AND DETAIL VIEW ---------------- */
+    private void AddProductView() {
+        centerPanel.remove(productDetail);
+        centerPanel.add(addProductPanel, BorderLayout.EAST);
+        centerPanel.revalidate();
+        centerPanel.repaint();
+    }
+    
+    private void DetailView() {
+        centerPanel.remove(addProductPanel);
+        if (updatePanel != null) {
+            centerPanel.remove(updatePanel);
+        }
+        centerPanel.add(productDetail, BorderLayout.EAST);
+        centerPanel.revalidate();
+        centerPanel.repaint();
+    }
+
+    private void UpdateProductView(Product productToUpdate) {
+        centerPanel.remove(productDetail);
+        centerPanel.remove(addProductPanel);
+        
+        // Create or reuse update panel
+        if (updatePanel == null) {
+            updatePanel = new UpdatePanel();
+            updatePanel.setOnProductUpdatedCallback(() -> {
+                refreshProductList();
+                // Show detail view after successful update
+                if (selectedProduct != null) {
+                    DetailView();
+                    productDetail.displayProduct(selectedProduct);
+                }
+            });
+        }
+        
+        updatePanel.setProduct(productToUpdate);
+        centerPanel.add(updatePanel, BorderLayout.EAST);
+        centerPanel.revalidate();
+        centerPanel.repaint();
     }
 }

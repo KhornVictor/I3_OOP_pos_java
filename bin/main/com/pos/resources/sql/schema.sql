@@ -1,6 +1,15 @@
 CREATE DATABASE IF NOT EXISTS i3_pos_db;
 USE i3_pos_db;
 
+select * from user;
+select * from category;
+select * from customer;
+select * from inventoryadjustment;
+select * from product;
+select * from receipt;
+select * from sale;
+select * from saleitem;
+
 // Table User
 
     CREATE TABLE IF NOT EXISTS User (

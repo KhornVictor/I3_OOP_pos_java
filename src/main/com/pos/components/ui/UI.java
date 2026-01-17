@@ -3,6 +3,7 @@ package main.com.pos.components.ui;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -17,12 +18,15 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -44,7 +48,7 @@ public class UI extends JFrame {
     }
 
     public static ImageBackgroundPanel setBackgroundImage(String imagePath) {
-        ImageBackgroundPanel backgroundPanel = new ImageBackgroundPanel(imagePath);
+        ImageBackgroundPanel backgroundPanel = new ImageBackgroundPanel("src/main/com/pos/resources/" + imagePath);
         backgroundPanel.setLayout(new GridBagLayout());
         backgroundPanel.setOpaque(true);
         return backgroundPanel;
@@ -65,6 +69,17 @@ public class UI extends JFrame {
         return card;
     }
 
+    public static Image getImage(String imagePath) {
+        try {
+            File file = new File("src/main/com/pos/resources/" + imagePath);
+            Image image = ImageIO.read(file);
+            return image;
+        } catch (IOException e) {
+            System.err.println("❌ Failed to load image: " + imagePath);
+        }
+        return null;    
+    }
+
     public static Image internetImage(String imageUrl) {
         try {
             Image image = ImageIO.read(new URL(imageUrl));
@@ -78,22 +93,18 @@ public class UI extends JFrame {
     public static JLabel setIconLabel(String iconPath, int width, int height) {
         JLabel iconLabel = new JLabel();
         java.io.InputStream is = null;
+        String path = "src/main/com/pos/resources/" + iconPath;
         try {
-            is = UI.class.getClassLoader().getResourceAsStream(iconPath);
-            if (is == null) {
-                System.err.println("❌ Icon not found on classpath: " + iconPath);
-                return iconLabel;
-            }
+            File file = new File(path);
+            is = new FileInputStream(file);
             Image image = ImageIO.read(is);
-            if (image != null) {
-                Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                iconLabel.setIcon(new javax.swing.ImageIcon(scaledImage));
-            }
-        } catch (IOException | IllegalArgumentException e) {
-            System.err.println("❌ Failed to load icon image: " + iconPath);
+            Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            iconLabel.setIcon(new ImageIcon(scaledImage));
+        } catch (IOException | NullPointerException e) {
+            System.err.println("❌ Failed to load icon: " + path);
         } finally {
             if (is != null) {
-                try { is.close(); } catch (IOException ignored) {}
+                try { is.close(); } catch (IOException e) { /* Ignore */ }
             }
         }
         return iconLabel;
@@ -103,7 +114,7 @@ public class UI extends JFrame {
     public static JLabel setInternetIconLabel(String imageUrl, int width, int height) {
         JLabel iconLabel = new JLabel();
         if (imageUrl != null) {
-            Image image = internetImage(imageUrl);
+            Image image = internetImage(imageUrl.trim());
             Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             iconLabel.setIcon(new javax.swing.ImageIcon(scaledImage));
         }
@@ -195,8 +206,8 @@ public class UI extends JFrame {
         private Image backgroundImage;
         @SuppressWarnings("unused")
         public ImageBackgroundPanel(String imagePath) {
-            try { backgroundImage = ImageIO.read(getClass().getClassLoader().getResourceAsStream(imagePath));  } 
-            catch (IOException | NullPointerException e) { System.err.println("❌ Failed to load background image: " + imagePath); }
+            try { backgroundImage = ImageIO.read(new File(imagePath)); }
+            catch (IOException e) { System.err.println("❌ Failed to load background image: " + imagePath); }
         }
 
         @Override
@@ -347,20 +358,16 @@ public class UI extends JFrame {
         }
     }
 
-    public static GradientCard actionCard(String title, String desc, Color color, String icon) {
-        return actionCardWithImage(title, desc, null, icon);
+    public static GradientCard actionCard(String title, String desc, Color color, String icon, MouseAdapter mouseAdapter) {
+        return actionCardWithImage(title, desc, null, icon, mouseAdapter);
     }
 
-    public static GradientCard actionCardWithImage(String title, String desc, String imageUrl, String icon) {
+    public static GradientCard actionCardWithImage(String title, String desc, String imageUrl, String icon, MouseAdapter mouseAdapter) {
         GradientCard card = new GradientCard(null);
-        
-        if (imageUrl != null) {
-            card.setBackgroundImage(imageUrl);
-        } else {
-            card.setBackgroundColor(new Color(100, 150, 200));
-        }
+        if (imageUrl != null && !imageUrl.isEmpty()) card.setBackgroundImage(imageUrl);
+        else card.setBackgroundColor(new Color(100, 150, 200));
 
-        JLabel iconLbl = new JLabel(setInternetIconLabel(icon, 28, 28).getIcon());
+        JLabel iconLbl = new JLabel(setIconLabel(icon , 28, 28).getIcon());
         iconLbl.setFont(new Font("Segoe UI", Font.PLAIN, 28));
         iconLbl.setHorizontalAlignment(JLabel.CENTER);
         iconLbl.setPreferredSize(new Dimension(50, 50));
@@ -377,6 +384,10 @@ public class UI extends JFrame {
         card.add(Box.createVerticalStrut(10));
         card.add(titleLbl);
         card.add(descLbl);
+
+        if (mouseAdapter != null) {
+            card.addMouseListener(mouseAdapter);
+        }
 
         addHover(card);
 
@@ -416,7 +427,8 @@ public class UI extends JFrame {
 
         public void setBackgroundImage(String imageUrl) {
             try {
-                this.backgroundImage = ImageIO.read(new URL(imageUrl));
+                File file = new File("src/main/com/pos/resources/" + imageUrl);
+                this.backgroundImage = ImageIO.read(file);
             } catch (IOException e) {
                 System.err.println("❌ Failed to load image: " + imageUrl);
             }
@@ -444,9 +456,9 @@ public class UI extends JFrame {
 
             // Draw rounded rectangle with gradient or image
             RoundRectangle2D.Float shape = new RoundRectangle2D.Float(
-                    SHADOW_SIZE / 2, SHADOW_SIZE / 2,
-                    width - SHADOW_SIZE, height - SHADOW_SIZE,
-                    RADIUS, RADIUS
+                SHADOW_SIZE / 2, SHADOW_SIZE / 2,
+                width - SHADOW_SIZE, height - SHADOW_SIZE,
+                RADIUS, RADIUS
             );
 
             if (backgroundImage != null) {
@@ -512,7 +524,7 @@ public class UI extends JFrame {
      public static GradientCard statisticCard(String value, String title, String percent, Color color, String icon) {
         GradientCard card = new GradientCard(color);
 
-        JLabel iconLbl = new JLabel(setInternetIconLabel(icon , 32, 32).getIcon());
+        JLabel iconLbl = new JLabel(setIconLabel(icon , 32, 32).getIcon());
         iconLbl.setFont(new Font("Segoe UI", Font.PLAIN, 32));
         iconLbl.setHorizontalAlignment(JLabel.CENTER);
         iconLbl.setPreferredSize(new Dimension(50, 50));
@@ -542,4 +554,8 @@ public class UI extends JFrame {
 
         return card;
     }
+
+     public static Component actionCardWithImage(String title, String desc, String imageUrl, String icon, Object mouseAdapter) {
+        throw new UnsupportedOperationException("Unimplemented method 'actionCardWithImage'");
+     }
 }

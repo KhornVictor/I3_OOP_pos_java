@@ -1,12 +1,14 @@
 package main.com.pos.model;
 
 public class User {
-    private int userId;
+    private String userId;
     private String username;
     private String password;
     private String role;
     private String name;
     private String email;
+    private int addressId;
+    private String image;
 
     public User() {}
 
@@ -20,17 +22,30 @@ public class User {
         setPassword(password);
     }
 
-    public User(int userId, String username, String password, String role, String name, String email) {
+    public User(String userId, String username, String password, String role, String name, String email) {
         this.userId = userId;
         setUsername(username);
         setPassword(password);
         setRole(role);
         setName(name);
         setEmail(email);
+        setImage("images/avatar/default.png");
     }
 
-    public int getUserId() { return userId; }
-    public void setUserId(int userId) { this.userId = userId; }
+
+    public User(String userId, String username, String password, String role, String name, String email, int addressId, String image) {
+        this.userId = userId;   
+        setUsername(username);
+        setPassword(password);
+        setRole(role);
+        setName(name);
+        setEmail(email);
+        setAddressId(addressId);
+        setImage(image);
+    }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getUsername() { return username; }
     public final void setUsername(String username) { 
@@ -61,6 +76,9 @@ public class User {
         this.name = (name == null) ? "" : name.trim(); 
     }
 
+    public String getImage() { return this.image; }
+    public final void setImage(String image) { this.image = image; }
+
     public String getEmail() { return email; }
     public final void setEmail(String email) { 
         if (email != null && !email.contains("@")) {
@@ -68,6 +86,9 @@ public class User {
         }
         this.email = email; 
     }
+
+    public int getAddressId() { return addressId; }
+    public final void setAddressId(int addressId) { this.addressId = addressId; }
 
     @Override
     public String toString() {

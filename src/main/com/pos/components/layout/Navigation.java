@@ -2,12 +2,19 @@ package main.com.pos.components.layout;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import static java.awt.Frame.HAND_CURSOR;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Ellipse2D;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -18,11 +25,12 @@ import javax.swing.border.EmptyBorder;
 import main.com.pos.components.ui.UI;
 import main.com.pos.components.ui.UI.RoundedPanel;
 import main.com.pos.model.User;
+import main.com.pos.view.setting.SettingPanel;
 
 public class Navigation extends JPanel {
     private final JLabel dashboardLabel;
 
-    public Navigation(User user, String tilePanel){ 
+    public Navigation(User user, String tilePanel, ContentPanel contentPanel, SideBar sideBar) { 
         setLayout(new BorderLayout());
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(24, 32, 12, 32));
@@ -136,28 +144,62 @@ public class Navigation extends JPanel {
 
         // User avatar
         JPanel avatarPanel = new JPanel() {
+
+            private final int SIZE = 40;
+
+            {
+                setOpaque(false);
+                setPreferredSize(new Dimension(SIZE, SIZE));
+            }
+
             @Override
             protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
+
+                // Clip to circle
+                Shape circle = new Ellipse2D.Float(0, 0, SIZE, SIZE);
+                g2.setClip(circle);
+
                 // Draw circle background
                 g2.setColor(new Color(59, 130, 246));
-                g2.fillOval(0, 0, 40, 40);
-                
-                // Draw user icon
-                g2.setColor(Color.WHITE);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 20));
-                g2.drawImage(UI.internetImage("https://cdn-icons-png.freepik.com/512/147/147142.png"), 0, 0, 40, 40, this);
-                
+                g2.fill(circle);
+
+                // Draw avatar image
+                Image img = UI.getImage(user.getImage());
+                if (img != null) {
+                    g2.drawImage(img, 0, 0, SIZE, SIZE, this);
+                }
+
                 g2.dispose();
             }
+
+            @Override
+            public boolean contains(int x, int y) {
+                double dx = x - SIZE / 2.0;
+                double dy = y - SIZE / 2.0;
+                return dx * dx + dy * dy <= (SIZE / 2.0) * (SIZE / 2.0);
+            }
         };
+
         avatarPanel.setOpaque(false);
         avatarPanel.setPreferredSize(new Dimension(40, 40));
-        userPanel.add(avatarPanel);
+        avatarPanel.setCursor(new Cursor(HAND_CURSOR));
 
+        avatarPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+                System.out.println("User avatar clicked!");
+                contentPanel.removeAll();
+                contentPanel.add(new SettingPanel(user));
+                contentPanel.revalidate();
+                contentPanel.repaint();
+                setTitle("Settings");
+                sideBar.activateMenu("Settings");
+            }
+        });
+
+        userPanel.add(avatarPanel);
         rightPanel.add(userPanel);
         add(rightPanel, BorderLayout.EAST);
     }

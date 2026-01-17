@@ -5,22 +5,18 @@ public class Customer {
     private String name;
     private String email;
     private String phone;
-    private Address address;
 
-    public Customer() {}
-    public Customer(int customerId, String name, String email, String phone, Address address) {
+    public Customer(int customerId, String name, String email, String phone) {
         this.customerId = customerId;
         setName(name);
         setEmail(email);
         setPhone(phone);
-        this.address = address;
     }
 
     public int getCustomerId() { return customerId; }
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
-    public Address getAddress() { return address; }
 
     public void setCustomerId(int customerId) { this.customerId = customerId; }
     public final void setName(String name) { 
@@ -36,7 +32,6 @@ public class Customer {
         this.email = email; 
     }
     public final void setPhone(String phone) { this.phone = phone; }
-    public void setAddress(Address address) { this.address = address; }
 
     @Override
     public String toString() {
