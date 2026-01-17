@@ -26,9 +26,7 @@ public class Address {
 
     public void setAddressId(int addressId) { this.addressId = addressId; }
     public final void setStreet(String street) { 
-        if (street == null || street.trim().isEmpty()) {
-            throw new IllegalArgumentException("Street cannot be null or empty");
-        }
+        if (street == null || street.trim().isEmpty()) throw new IllegalArgumentException("Street cannot be null or empty");
         this.street = street; 
     }
     public final void setCity(String city) { 

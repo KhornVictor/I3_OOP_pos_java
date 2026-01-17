@@ -3,6 +3,8 @@ package main.com.pos.view.user;
 import java.awt.*;
 import javax.swing.*;
 import main.com.pos.components.ui.UI;
+import main.com.pos.dao.AddressDAO;
+import main.com.pos.model.Address;
 import main.com.pos.model.User;
 
 public class UserDetailPanel extends JPanel {
@@ -202,19 +204,22 @@ public class UserDetailPanel extends JPanel {
         this.currentUser = user;
 
         String nameText = user != null && user.getName() != null ? user.getName() : "Select a user";
-        String idText = user != null && user.getUserId() != null ? "ID: " + user.getUserId() : "ID: -";
+        String idText = user != null ? "ID: " + user.getUserId() : "ID: -";
         String usernameText = user != null && user.getUsername() != null ? user.getUsername() : "-";
         String emailText = user != null && user.getEmail() != null ? user.getEmail() : "-";
         String phoneText = "+1-234-567-8901";
         String roleText = user != null && user.getRole() != null ? user.getRole() : "-";
-
-
+        String addressText = user != null ? getAddressString(user.getUserId()) : "-";
+        
+        
+        
         nameLabel.setText(nameText);
         idLabel.setText(idText);
         usernameValueLabel.setText(usernameText);
         emailValueLabel.setText(emailText);
         phoneValueLabel.setText(phoneText);
         roleTagLabel.setText(roleText);
+        addressValueLabel.setText(addressText);
         if (user != null && "admin".equalsIgnoreCase(user.getRole())) {
             roleTagLabel.setBackground(Color.RED);
             roleTagLabel.setForeground(Color.WHITE);
@@ -229,5 +234,11 @@ public class UserDetailPanel extends JPanel {
 
         revalidate();
         repaint();
+    }
+
+    private String getAddressString(int userId) {
+        Address address = new AddressDAO().getById(userId);
+        if (address != null)  return String.format("%s, %s, %s", address.getStreet(), address.getCity(), address.getCountry());
+        return "-";
     }
 }

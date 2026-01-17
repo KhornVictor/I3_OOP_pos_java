@@ -19,7 +19,9 @@ public class UserPanel extends JPanel {
     private JTable userTable;
     private DefaultTableModel tableModel;
     private final UserDetailPanel userDetail;
+    private final AddUserPanel addUserPanel;
     private final JPanel centerPanel;
+    private final JPanel sidePanel;
     private User selectedUser;
     
     private String currentStatusFilter = "All Status";
@@ -35,17 +37,28 @@ public class UserPanel extends JPanel {
         allUsers = userDAO.getAll();
         currentFilteredUsers = new ArrayList<>(allUsers);
         selectedUser = currentFilteredUsers.isEmpty() ? null : currentFilteredUsers.get(0);
+        
+        // Initialize components first before using them
+        userDetail = new UserDetailPanel(selectedUser);
+        addUserPanel = new AddUserPanel();
+        sidePanel = createSidePanel();
 
         add(createTopBar(), BorderLayout.NORTH);
-        
         centerPanel = new JPanel(new BorderLayout(10, 0));
         centerPanel.setOpaque(false);
-        userDetail = new UserDetailPanel(selectedUser);
-        
-            centerPanel.add(createTable(), BorderLayout.CENTER);
-        centerPanel.add(userDetail, BorderLayout.EAST);
+        centerPanel.add(sidePanel, BorderLayout.EAST);
+        centerPanel.add(createTable(), BorderLayout.CENTER);
         
         add(centerPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createSidePanel(){
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(userDetail, BorderLayout.CENTER);
+        panel.setPreferredSize(new Dimension(350, getHeight()));
+        panel.setBackground(new Color(245, 247, 250));
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        return panel;
     }
 
     private JPanel createTopBar() {
@@ -394,12 +407,12 @@ public class UserPanel extends JPanel {
                 String name = user.getName() != null ? user.getName().toLowerCase() : "";
                 String username = user.getUsername() != null ? user.getUsername().toLowerCase() : "";
                 String email = user.getEmail() != null ? user.getEmail().toLowerCase() : "";
-                String userId = user.getUserId() != null ? user.getUserId().toLowerCase() : "";
+                int userId = user.getUserId();
                 
                 return !name.contains(lowerQuery) && 
                        !username.contains(lowerQuery) && 
                        !email.contains(lowerQuery) && 
-                       !userId.contains(lowerQuery);
+                       !(String.valueOf(userId).contains(lowerQuery));
             });
         }
 
@@ -410,9 +423,7 @@ public class UserPanel extends JPanel {
     private void refreshTable(List<User> users) {
         Object[][] data = convertUsersToTableData(users);
         tableModel.setRowCount(0);  // Clear existing rows
-        for (Object[] row : data) {
-            tableModel.addRow(row);
-        }
+        for (Object[] row : data) { tableModel.addRow(row); }
 
         if (!users.isEmpty()) {
             userTable.setRowSelectionInterval(0, 0);
@@ -425,12 +436,10 @@ public class UserPanel extends JPanel {
     }
 
     private void handleAddUser() {
-        JOptionPane.showMessageDialog(
-            this,
-            "Add User functionality will be implemented here.\nThis would open an AddUserPanel similar to AddProductPanel.",
-            "Add User",
-            JOptionPane.INFORMATION_MESSAGE
-        );
+        sidePanel.removeAll();
+        sidePanel.add(addUserPanel, BorderLayout.EAST);
+        sidePanel.revalidate();
+        sidePanel.repaint();
     }
 
     private void handleUpdateUser() {
@@ -488,12 +497,9 @@ public class UserPanel extends JPanel {
         );
 
         if (choice == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(
-                this,
-                "User deletion functionality will be implemented when UserDAO.delete() is added.",
-                "Info",
-                JOptionPane.INFORMATION_MESSAGE
-            );
+            userDAO.delete(selectedUser.getUserId());
+            allUsers.removeIf(user -> user.getUserId() == selectedUser.getUserId());
+            applyFilters();
         }
     }
 
@@ -503,17 +509,5 @@ public class UserPanel extends JPanel {
         allUsers.clear();
         allUsers.addAll(updatedUsers);
         applyFilters();
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("User Management Panel");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            frame.setSize(1000, 600);
-            frame.setLocationRelativeTo(null);
-            frame.setContentPane(new UserPanel());
-            frame.setVisible(true);
-        });
     }
 }
