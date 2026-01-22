@@ -221,14 +221,9 @@ public class SettingPanel extends JPanel {
     private String getGreetingMessage() {
         int hour = java.time.LocalDateTime.now().getHour();
         
-        if (hour >= 5 && hour < 12) {
-            return "Good morning! Let's have a productive day.";
-        } else if (hour >= 12 && hour < 17) {
-            return "Good afternoon! Keep up the great work.";
-        } else if (hour >= 17 && hour < 21) {
-            return "Good evening! Wrap up your day successfully.";
-        } else {
-            return "Good night! Stay focused and complete your tasks.";
-        }
+        if (hour >= 5 && hour < 12) return "Good morning! Let's have a productive day.";
+        else if (hour >= 12 && hour < 17) return "Good afternoon! Keep up the great work.";
+        else if (hour >= 17 && hour < 21) return "Good evening! Wrap up your day successfully.";
+        else return "Good night! Stay focused and complete your tasks.";
     }
 }
