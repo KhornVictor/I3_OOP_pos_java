@@ -1,7 +1,7 @@
 package main.com.pos.model;
 
 public class User {
-    private String userId;
+    private int userId;
     private String username;
     private String password;
     private String role;
@@ -22,7 +22,7 @@ public class User {
         setPassword(password);
     }
 
-    public User(String userId, String username, String password, String role, String name, String email) {
+    public User(int userId, String username, String password, String role, String name, String email) {
         this.userId = userId;
         setUsername(username);
         setPassword(password);
@@ -33,7 +33,7 @@ public class User {
     }
 
 
-    public User(String userId, String username, String password, String role, String name, String email, int addressId, String image) {
+    public User(int userId, String username, String password, String role, String name, String email, int addressId, String image) {
         this.userId = userId;   
         setUsername(username);
         setPassword(password);
@@ -44,8 +44,8 @@ public class User {
         setImage(image);
     }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 
     public String getUsername() { return username; }
     public final void setUsername(String username) { 

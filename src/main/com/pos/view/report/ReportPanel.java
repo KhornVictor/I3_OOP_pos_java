@@ -15,7 +15,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import main.com.pos.components.ui.TableDesign;
+import main.com.pos.components.ui.TableProduct;
 import main.com.pos.dao.ReportDAO;
 import main.com.pos.model.Sale;
 import main.com.pos.service.OrderService;
@@ -89,13 +89,13 @@ public class ReportPanel extends JPanel {
         reportTable = new JTable(tableModel);
         
         // Apply modern styling
-        TableDesign.styleTable(reportTable);
+        TableProduct.styleTable(reportTable);
         reportTable.setRowHeight(30);
         
         // Apply specific renderers for currency columns
-        reportTable.getColumn("Total").setCellRenderer(new TableDesign.CurrencyRenderer());
-        reportTable.getColumn("Discount").setCellRenderer(new TableDesign.CurrencyRenderer());
-        reportTable.getColumn("Final Amount").setCellRenderer(new TableDesign.CurrencyRenderer());
+        reportTable.getColumn("Total").setCellRenderer(new TableProduct.CurrencyRenderer());
+        reportTable.getColumn("Discount").setCellRenderer(new TableProduct.CurrencyRenderer());
+        reportTable.getColumn("Final Amount").setCellRenderer(new TableProduct.CurrencyRenderer());
         
         JScrollPane scrollPane = new JScrollPane(reportTable);
         scrollPane.setBackground(Color.WHITE);

@@ -40,4 +40,14 @@ public class Layout extends JFrame {
         root.add(sideBar, BorderLayout.WEST);
         root.add(mainContent, BorderLayout.CENTER);
     }
+
+    public static void main(String[] args) {
+        // For testing purposes
+        User testUser = new User();
+        testUser.setUsername("admin");
+        testUser.setRole("Administrator");
+        
+        Layout layout = new Layout(testUser);
+        layout.setVisible(true);
+    }
 }

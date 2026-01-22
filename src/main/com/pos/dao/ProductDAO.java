@@ -28,7 +28,7 @@ public class ProductDAO {
     }
 
     public Product getById(int id) {
-        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock, Image FROM Product WHERE ProductID = ?";
+        String sql = "SELECT ProductID, Name, CategoryID, Price, StockQuantity, Image FROM Product WHERE ProductID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, id);
@@ -43,7 +43,7 @@ public class ProductDAO {
 
     public List<Product> getByCategory(int categoryId) {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT ProductID, Name, CategoryID, Price, Stock, Image FROM Product WHERE CategoryID = ?";
+        String sql = "SELECT ProductID, Name, CategoryID, Price, StockQuantity, Image FROM Product WHERE CategoryID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, categoryId);
@@ -59,7 +59,7 @@ public class ProductDAO {
     }
 
     public boolean create(Product product) {
-        String sql = "INSERT INTO Product (Name, CategoryID, Price, Stock, Image) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Product (Name, CategoryID, Price, StockQuantity, Image) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
@@ -79,7 +79,7 @@ public class ProductDAO {
     }
 
     public boolean update(Product product) {
-        String sql = "UPDATE Product SET Name = ?, CategoryID = ?, Price = ?, Stock = ?, Image = ? WHERE ProductID = ?";
+        String sql = "UPDATE Product SET Name = ?, CategoryID = ?, Price = ?, StockQuantity = ?, Image = ? WHERE ProductID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
@@ -116,7 +116,7 @@ public class ProductDAO {
     }
 
     public boolean updateStock(int productId, int quantityChange) {
-        String sql = "UPDATE Product SET Stock = Stock + ? WHERE ProductID = ?";
+        String sql = "UPDATE Product SET StockQuantity = StockQuantity + ? WHERE ProductID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, quantityChange);
@@ -135,5 +135,21 @@ public class ProductDAO {
         int stockQuantity = resultSet.getInt("StockQuantity");
         String image = resultSet.getString("Image");
         return new Product(productId, name, categoryId, price, stockQuantity, image);
+    }
+
+    public static int getCategoryIdByName(String categoryName) {
+        String sql = "SELECT CategoryID FROM Category WHERE Name = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, categoryName);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("CategoryID");
+                }
+            }
+        } catch (SQLException error) {
+            System.out.println(Color.RED + "❌ getCategoryIdByName error: " + error.getMessage() + Color.RESET);
+        }
+        return -1;
     }
 }
