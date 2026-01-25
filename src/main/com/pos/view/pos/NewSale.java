@@ -194,37 +194,56 @@ public class NewSale extends JPanel {
         cashBtn.setForeground(Color.WHITE);
         cashBtn.setFocusPainted(false);
         cashBtn.addActionListener(e -> {
-            showReceiptPanel();
+            if (cart.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
+            } else if (!isCartStockAvailable()) {
+                // Stock validation failed
+            } else {
+                handleCheckout("cash");
+            }
         });
-        JButton cardBtn = new JButton("Card");
-        cardBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        cardBtn.setBackground(new Color(59, 130, 246));
-        cardBtn.setForeground(Color.WHITE);
-        cardBtn.setFocusPainted(false);
-        cardBtn.addActionListener(e -> {
-            showReceiptPanel();
+        JButton qrBtn = new JButton("QR");
+        qrBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        qrBtn.setBackground(new Color(59, 130, 246));
+        qrBtn.setForeground(Color.WHITE);
+        qrBtn.setFocusPainted(false);
+        qrBtn.addActionListener(e -> {
+            if (cart.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
+            } else if (!isCartStockAvailable()) {
+                // Stock validation failed
+            } else {
+                showQRDialog();
+            }
         });
         paymentPanel.add(cashBtn);
-        paymentPanel.add(cardBtn);
+        paymentPanel.add(qrBtn);
         checkoutPanel.add(paymentPanel);
         checkoutPanel.add(Box.createVerticalStrut(8));
 
-        // QR code
-        JPanel qrPanel = new JPanel(new BorderLayout());
-        qrPanel.setOpaque(false);
-        JLabel qrLabel = new JLabel(new ImageIcon("src/main/com/pos/resources/images/qr_checkout.png"));
-        qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        qrPanel.add(qrLabel, BorderLayout.CENTER);
-        JButton qrDoneBtn = new JButton("Done");
-        qrDoneBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        qrDoneBtn.setBackground(new Color(33, 150, 243));
-        qrDoneBtn.setForeground(Color.WHITE);
-        qrDoneBtn.setFocusPainted(false);
-        qrDoneBtn.addActionListener(e -> {
-            showReceiptPanel();
+        // Add Done button below payment options
+        JButton doneBtn = new JButton("Done");
+        doneBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        doneBtn.setBackground(new Color(33, 150, 243));
+        doneBtn.setForeground(Color.WHITE);
+        doneBtn.setFocusPainted(false);
+        doneBtn.setPreferredSize(new Dimension(Short.MAX_VALUE, 44));
+        doneBtn.setMaximumSize(new Dimension(Short.MAX_VALUE, 44));
+        doneBtn.setMinimumSize(new Dimension(10, 44));
+        doneBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        doneBtn.addActionListener(e -> {
+            if (cart.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
+            } else if (!isCartStockAvailable()) {
+                // Stock validation failed
+            } else {
+                handleCheckout("cash");
+            }
         });
-        qrPanel.add(qrDoneBtn, BorderLayout.SOUTH);
-        checkoutPanel.add(qrPanel);
+        // Remove side padding from checkoutPanel to allow full width
+        checkoutPanel.setBorder(new EmptyBorder(16, 0, 0, 0));
+        checkoutPanel.add(doneBtn);
+        checkoutPanel.add(Box.createVerticalStrut(8));
 
         rightPanel.add(checkoutPanel, BorderLayout.SOUTH);
         add(rightPanel, BorderLayout.EAST);
@@ -242,6 +261,82 @@ public class NewSale extends JPanel {
         // Add receipt details here (for now, just a placeholder)
         receiptPanel.add(new JLabel("Thank you for your purchase!"));
         JOptionPane.showMessageDialog(this, receiptPanel, "Receipt", JOptionPane.PLAIN_MESSAGE);
+    }
+
+    // Show QR dialog with QR image, Back, and Done
+    private void showQRDialog() {
+        JDialog qrDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Scan QR to Pay", Dialog.ModalityType.APPLICATION_MODAL);
+        qrDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        qrDialog.setSize(400, 600);
+        qrDialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setBackground(new Color(247, 249, 251));
+
+        // Try to load the QR image using the same logic as the rest of the app
+        Image qrImg = main.com.pos.components.ui.UI.getImage("images/checkout.png");
+        JLabel qrLabel;
+        if (qrImg != null) {
+            qrLabel = new JLabel(new ImageIcon(qrImg.getScaledInstance(300, 300, Image.SCALE_SMOOTH)));
+        } else {
+            qrLabel = new JLabel("QR image not found. Please add 'checkout.png' to images folder.");
+            qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            qrLabel.setForeground(Color.RED);
+        }
+        qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(qrLabel, BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 16));
+        btnPanel.setOpaque(false);
+
+        JButton backBtn = new JButton("Back");
+        backBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        backBtn.setBackground(new Color(200, 200, 200));
+        backBtn.setForeground(Color.BLACK);
+        backBtn.setFocusPainted(false);
+        backBtn.setPreferredSize(new Dimension(120, 44));
+        backBtn.setMaximumSize(new Dimension(120, 44));
+        backBtn.setMinimumSize(new Dimension(120, 44));
+        backBtn.addActionListener(e -> qrDialog.dispose());
+        btnPanel.add(backBtn);
+
+        JButton doneBtn = new JButton("Done");
+        doneBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        doneBtn.setBackground(new Color(33, 150, 243));
+        doneBtn.setForeground(Color.WHITE);
+        doneBtn.setFocusPainted(false);
+        doneBtn.setPreferredSize(new Dimension(120, 44));
+        doneBtn.setMaximumSize(new Dimension(120, 44));
+        doneBtn.setMinimumSize(new Dimension(120, 44));
+        doneBtn.addActionListener(e -> {
+            if (cart.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
+            } else if (!isCartStockAvailable()) {
+                // Stock validation failed
+            } else {
+                qrDialog.dispose();
+                handleCheckout("qr");
+            }
+        });
+        btnPanel.add(doneBtn);
+
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        qrDialog.setContentPane(panel);
+        qrDialog.setVisible(true);
+    }
+
+    // Deduct stock for all products in cart and show receipt
+    private void handleCheckout(String method) {
+        ProductDAO productDAO = new ProductDAO();
+        for (CartItem item : cart.values()) {
+            // Deduct stock by negative quantity
+            productDAO.updateStock(item.product.getProductId(), -item.qty);
+        }
+        cart.clear();
+        updateCartPanel();
+        showReceiptPanel();
     }
 
 
@@ -540,5 +635,25 @@ public class NewSale extends JPanel {
             frame.setContentPane(new NewSale());
             frame.setVisible(true);
         });
+    }
+
+    // Check if all products in cart have enough stock
+    private boolean isCartStockAvailable() {
+        StringBuilder errorMsg = new StringBuilder();
+        boolean ok = true;
+        for (CartItem item : cart.values()) {
+            int available = item.product.getStockQuantity();
+            if (item.qty > available) {
+                ok = false;
+                errorMsg.append(String.format("%s: Only %d in stock, but %d in cart.\n", item.product.getName(), available, item.qty));
+            } else if (available <= 0) {
+                ok = false;
+                errorMsg.append(String.format("%s: Out of stock.\n", item.product.getName()));
+            }
+        }
+        if (!ok) {
+            JOptionPane.showMessageDialog(this, errorMsg.toString(), "Stock Not Available", JOptionPane.ERROR_MESSAGE);
+        }
+        return ok;
     }
 }
