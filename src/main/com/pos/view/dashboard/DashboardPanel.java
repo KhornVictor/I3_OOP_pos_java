@@ -8,6 +8,8 @@ import main.com.pos.components.layout.ContentPanel;
 import main.com.pos.components.layout.Navigation;
 import main.com.pos.components.layout.SideBar;
 import main.com.pos.components.ui.UI;
+import main.com.pos.dao.ProductDAO;
+import main.com.pos.dao.ReportDAO;
 import main.com.pos.model.User;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
 import main.com.pos.view.product.ProductPanel;
@@ -39,10 +41,13 @@ public class DashboardPanel extends JPanel {
         panel.setOpaque(false);
         panel.setBorder(new EmptyBorder(0, 0, 25, 0));
 
-        panel.add(UI.statisticCard("$12,450", "Sales Today", "+12.5%", new Color(76, 175, 80), "images/icons/dashboard/statistic/SaleToday.png"));
-        panel.add(UI.statisticCard("142", "Transactions", "+8.2%", new Color(33, 150, 243), "images/icons/dashboard/statistic/Transactions.png"));
-        panel.add(UI.statisticCard("1,234", "Products", "-2.4%", new Color(12, 58, 90), "images/icons/dashboard/statistic/Products.png"));
-        panel.add(UI.statisticCard("856", "Customers", "+15.3%", new Color(156, 39, 176), "images/icons/dashboard/statistic/Customers.png"));
+        ReportDAO reportDAO = new ReportDAO();
+        ProductDAO productDAO = new ProductDAO();
+
+        panel.add(UI.statisticCard(Integer.toString((int)Math.round(reportDAO.getTotalSalesForDay(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date())))) + " $", "Sales Today",Integer.toString((int)Math.round(reportDAO.getPercentageTodayAndYesterday())), new Color(76, 175, 80), "images/icons/dashboard/statistic/SaleToday.png"));
+        panel.add(UI.statisticCard(Integer.toString((int)Math.round(reportDAO.getTotalTransactionsForDay(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date())))), "Transactions", Integer.toString((int)Math.round(reportDAO.getPercentageOfTransactionsOfTodayAndYesterday())), new Color(33, 150, 243), "images/icons/dashboard/statistic/Transactions.png"));
+        panel.add(UI.statisticCard(Integer.toString(productDAO.countProducts()), "Products", "", new Color(12, 58, 90), "images/icons/dashboard/statistic/Products.png"));
+        panel.add(UI.statisticCard(Integer.toString(new main.com.pos.dao.UserDAO().countUsers()), "Users", "", new Color(156, 39, 176), "images/icons/dashboard/statistic/Customers.png"));
 
         return panel;
     }

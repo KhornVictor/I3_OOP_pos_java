@@ -18,13 +18,23 @@ public class ProductDAO {
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
-            while (resultSet.next()) {
-                products.add(mapRow(resultSet));
+            while (resultSet.next()) { products.add(mapRow(resultSet)); }
+        } catch (SQLException error) { System.out.println(Color.RED + "❌ getAll product error: " + error.getMessage() + Color.RESET); }
+        return products;
+    }
+
+    public int countProducts() {
+        String sql = "SELECT COUNT(*) AS total FROM Product";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            if (resultSet.next()) {
+                return resultSet.getInt("total");
             }
         } catch (SQLException error) {
-            System.out.println(Color.RED + "❌ getAll product error: " + error.getMessage() + Color.RESET);
+            System.out.println(Color.RED + "❌ countProducts error: " + error.getMessage() + Color.RESET);
         }
-        return products;
+        return 0;
     }
 
     public Product getById(int id) {

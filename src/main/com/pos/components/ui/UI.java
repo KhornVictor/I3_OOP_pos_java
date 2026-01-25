@@ -204,20 +204,41 @@ public class UI extends JFrame {
 
     public static class ImageBackgroundPanel extends JPanel {
         private Image backgroundImage;
+        private boolean blurEnabled = false;
+        private int blurScale = 8; // downscale factor to approximate blur
+
         @SuppressWarnings("unused")
         public ImageBackgroundPanel(String imagePath) {
             try { backgroundImage = ImageIO.read(new File(imagePath)); }
             catch (IOException e) { System.err.println("❌ Failed to load background image: " + imagePath); }
         }
 
+        /** Enable a lightweight blur by downscaling then upscaling the background. */
+        public void enableBlur(int downscaleFactor) {
+            this.blurEnabled = true;
+            this.blurScale = Math.max(2, downscaleFactor);
+        }
+
         @Override
         protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
             if (backgroundImage != null) {
-                Graphics2D graphics2d = (Graphics2D) graphics.create();
-                graphics2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                graphics2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-                graphics2d.dispose();
+                Graphics2D g2 = (Graphics2D) graphics.create();
+                g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+                if (blurEnabled) {
+                    int w = Math.max(1, getWidth());
+                    int h = Math.max(1, getHeight());
+                    int sw = Math.max(1, w / blurScale);
+                    int sh = Math.max(1, h / blurScale);
+
+                    Image scaled = backgroundImage.getScaledInstance(sw, sh, Image.SCALE_SMOOTH);
+                    g2.drawImage(scaled, 0, 0, w, h, this);
+                } else {
+                    g2.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                }
+                g2.dispose();
             }
         }
     }
@@ -537,11 +558,32 @@ public class UI extends JFrame {
         titleLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         titleLbl.setForeground(new Color(255, 255, 255, 200));
 
-        JLabel percentLbl = new JLabel(percent);
+        // Normalize percent input (can arrive as "+8.2%" etc.)
+        String cleaned = percent == null ? "0" : percent.replace("%", "").trim();
+        boolean negative = false;
+        if (cleaned.startsWith("+")) {
+            cleaned = cleaned.substring(1).trim();
+        } else if (cleaned.startsWith("-")) {
+            negative = true;
+            cleaned = cleaned.substring(1).trim();
+        }
+
+        double pctValue;
+        try { pctValue = Double.parseDouble(cleaned); } 
+        catch (NumberFormatException ignored) { pctValue = 0; }
+        double signedPct = negative ? -pctValue : pctValue;
+
+        JLabel percentLbl = new JLabel();
         percentLbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        percentLbl.setForeground(
-            percent.startsWith("-") ? new Color(255, 100, 100) : new Color(100, 255, 100)
-        );
+
+        if (percent != null && !percent.isEmpty()) {
+            String displayText = String.format("%s%.2f%%", (signedPct > 0 ? "+" : (signedPct < 0 ? "-" : "")), Math.abs(signedPct));
+            percentLbl.setText(displayText);
+        } else percentLbl.setText("");
+
+        if (signedPct > 0)  percentLbl.setForeground(new Color(100, 255, 100));
+        else if (signedPct < 0) percentLbl.setForeground(new Color(255, 100, 100));
+        else percentLbl.setForeground(new Color(255, 255, 255, 200));
 
         card.add(iconLbl);
         card.add(Box.createVerticalStrut(10));

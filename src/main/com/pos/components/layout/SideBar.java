@@ -17,10 +17,12 @@ import main.com.pos.components.ui.UI.SidebarMenuButton;
 import main.com.pos.model.User;
 import main.com.pos.view.dashboard.DashboardPanel;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
+import main.com.pos.view.pos.NewSale;
 import main.com.pos.view.product.ProductPanel;
 import main.com.pos.view.report.ReportPanel;
 import main.com.pos.view.setting.SettingPanel;
 import main.com.pos.view.user.UserPanel;
+import main.com.pos.view.welcome.WelcomePanel;
 
 public class SideBar extends JPanel {
 
@@ -68,6 +70,17 @@ public class SideBar extends JPanel {
         logoIconPanel.setOpaque(false);
         logoIconPanel.setPreferredSize(new Dimension(44, 44));
 
+        logoPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                navigation.setTitle("Dashboard");
+                contentPanel.removeAll();
+                contentPanel.add(new WelcomePanel(user), BorderLayout.CENTER);
+                contentPanel.revalidate();
+                contentPanel.repaint();
+            }
+        });
+
         JLabel logoText = new JLabel("POS System");
         logoText.setFont(new Font("Segoe UI", Font.BOLD, 16));
         logoText.setForeground(new Color(30, 41, 59));
@@ -99,6 +112,11 @@ public class SideBar extends JPanel {
         };
 
         for (String[] item : menuItems) {
+            // Check if the menu item should be visible for this user's role
+            if (!isMenuItemVisibleForRole(item[1].trim(), user.getRole())) {
+                continue;
+            }
+            
             SidebarMenuButton menuBtn = new SidebarMenuButton(item[0], new JLabel(item[1]), 
                 Color.WHITE, Color.BLACK,
                 new Color(255, 255, 255), new Color(226, 232, 240), new Color(59, 130, 246), new Color(37, 99, 235)
@@ -108,7 +126,7 @@ public class SideBar extends JPanel {
             String menuKey = item[1].trim();
             menuButtons.put(menuKey, menuBtn);
             
-            if (item[1].equals("Dashboard")) {
+            if (item[1].equals(" Dashboard")) {
                 activButton = menuBtn;
                 menuBtn.setActive(true);
             }
@@ -142,6 +160,7 @@ public class SideBar extends JPanel {
                     System.out.println("new sale menu clicked");
                     navigation.setTitle("NewSale");
                     contentPanel.removeAll();
+                    contentPanel.add(new NewSale(), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
@@ -223,7 +242,7 @@ public class SideBar extends JPanel {
         }
     }
 
-    private void handleLogout(Navigation navigation) {
+    private void handleLogout(@SuppressWarnings("unused") Navigation navigation) {
         // Clear user session
         this.user = null;
         
@@ -241,5 +260,35 @@ public class SideBar extends JPanel {
             
             System.out.println("✅ User logged out successfully");
         }
+    }
+
+    /**
+     * Determine if a menu item should be visible based on user role
+     * 
+     * Rules:
+     * - Admin: Can access all menu items
+     * - Cashier: Can only access "New Sale" and "Settings"
+     * - Other roles: Default to showing all items
+     */
+    private boolean isMenuItemVisibleForRole(String menuItem, String userRole) {
+        if (userRole == null || userRole.isEmpty()) {
+            return false;
+        }
+
+        String role = userRole.toLowerCase().trim();
+        
+        // Admin has full access
+        if (role.equals("admin")) {
+            return true;
+        }
+        
+        // Cashier has limited access
+        if (role.equals("cashier")) {
+            return menuItem.equalsIgnoreCase("New Sale") || 
+                   menuItem.equalsIgnoreCase("Settings");
+        }
+        
+        // Default behavior for other roles
+        return false;
     }
 }

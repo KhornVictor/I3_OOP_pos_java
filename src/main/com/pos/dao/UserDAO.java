@@ -98,7 +98,7 @@ public class UserDAO {
 			while (resultSet.next()) result.add(mapRow(resultSet));
 		} catch (SQLException error) { System.out.println("❌ getAll error: " + error.getMessage()); }
 		return result;
-	}
+	}	
 
 	public int createUserWithAddress(User user, Address address) throws SQLException {
 		String insertAddress = """
@@ -267,16 +267,13 @@ public class UserDAO {
 			}
 
 			// 2. Delete the user
-			int userRows = 0;
 			try (PreparedStatement ps = connection.prepareStatement(
 					"DELETE FROM User WHERE UserID = ?")) {
 				ps.setInt(1, userId);
-				userRows = ps.executeUpdate();
-			}
-
-			if (userRows == 0) {
-				connection.rollback();
-				return false;
+				if (ps.executeUpdate() == 0) {
+					connection.rollback();
+					return false;
+				}
 			}
 
 			// 4. Delete address only if no other users reference it
@@ -301,6 +298,16 @@ public class UserDAO {
 				try { connection.close(); } catch (SQLException ignored) {}
 			}
 		}
+	}
+
+	public int countUsers() {
+		String sql = "SELECT COUNT(*) AS UserCount FROM User";
+		try (Connection connection = DBConnection.getConnection();
+			 PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			 ResultSet resultSet = preparedStatement.executeQuery()) {
+			if (resultSet.next()) return resultSet.getInt("UserCount");
+		} catch (SQLException error) { System.out.println("❌ countUsers error: " + error.getMessage()); }
+		return 0;
 	}
 
 	private User mapRow(ResultSet resultSet) throws SQLException {

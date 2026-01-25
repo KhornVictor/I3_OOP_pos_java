@@ -17,19 +17,20 @@ import main.com.pos.model.SaleItem;
 public class OrderDAO {
 
     public int createOrder(Sale sale) {
-        String sql = "INSERT INTO Sale (UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Sale (UserID, SaleDate, CustomerID, Total, Discount, PaymentType) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             DateTime dateTime = sale.getSaleDate() != null ? sale.getSaleDate() : new DateTime();
 
             preparedStatement.setInt(1, sale.getUserId());
-            preparedStatement.setString(2, dateTime.getDate().toString());
-            preparedStatement.setString(3, dateTime.getTime().toString());
-            preparedStatement.setInt(4, sale.getCustomerId());
-            preparedStatement.setDouble(5, sale.getTotal());
-            preparedStatement.setDouble(6, sale.getDiscount());
-            preparedStatement.setString(7, sale.getPaymentType());
+            // Combine date and time into a single DATETIME string for SaleDate
+            String saleDateTime = dateTime.getDate().toString() + " " + dateTime.getTime().toString();
+            preparedStatement.setString(2, saleDateTime);
+            preparedStatement.setInt(3, sale.getCustomerId());
+            preparedStatement.setDouble(4, sale.getTotal());
+            preparedStatement.setDouble(5, sale.getDiscount());
+            preparedStatement.setString(6, sale.getPaymentType());
             
             preparedStatement.executeUpdate();
             try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
@@ -98,7 +99,7 @@ public class OrderDAO {
 
     public List<Sale> getAllOrders() {
         List<Sale> orders = new ArrayList<>();
-        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale";
+        String sql = "SELECT SaleID, UserID, SaleDate, CustomerID, Total, Discount, PaymentType FROM Sale";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -113,7 +114,7 @@ public class OrderDAO {
 
     public List<Sale> getOrdersByUser(int userId) {
         List<Sale> orders = new ArrayList<>();
-        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale WHERE UserID = ?";
+        String sql = "SELECT SaleID, UserID, SaleDate, CustomerID, Total, Discount, PaymentType FROM Sale WHERE UserID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, userId);
@@ -130,7 +131,7 @@ public class OrderDAO {
 
     public List<Sale> getOrdersByDate(LocalDate date) {
         List<Sale> orders = new ArrayList<>();
-        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale WHERE DATE(SaleDate) = ?";
+        String sql = "SELECT SaleID, UserID, SaleDate, CustomerID, Total, Discount, PaymentType FROM Sale WHERE DATE(SaleDate) = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, date.toString());
@@ -147,7 +148,7 @@ public class OrderDAO {
 
     public List<Sale> getOrdersBetween(LocalDate from, LocalDate to) {
         List<Sale> orders = new ArrayList<>();
-        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale WHERE DATE(SaleDate) BETWEEN ? AND ?";
+        String sql = "SELECT SaleID, UserID, SaleDate, CustomerID, Total, Discount, PaymentType FROM Sale WHERE DATE(SaleDate) BETWEEN ? AND ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, from.toString());
@@ -166,14 +167,9 @@ public class OrderDAO {
     private Sale mapSaleRow(ResultSet resultSet) throws SQLException {
         int saleId = resultSet.getInt("SaleID");
         int userId = resultSet.getInt("UserID");
-        LocalDate date = LocalDate.parse(resultSet.getString("SaleDate"));
-        String timeStr = null;
-        try {
-            timeStr = resultSet.getString("SaleTime");
-        } catch (SQLException ignored) {
-            // Column might be missing if schema older; fall back to midnight
-        }
-        LocalTime time = timeStr != null ? LocalTime.parse(timeStr) : LocalTime.MIDNIGHT;
+        java.sql.Timestamp ts = resultSet.getTimestamp("SaleDate");
+        LocalDate date = ts.toLocalDateTime().toLocalDate();
+        LocalTime time = ts.toLocalDateTime().toLocalTime();
         DateTime dateTime = new DateTime(date, time);
         int customerId = resultSet.getInt("CustomerID");
         double total = resultSet.getDouble("Total");

@@ -29,7 +29,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import main.com.pos.components.ui.TableProduct;
 import main.com.pos.dao.ReportDAO;
+import main.com.pos.dao.UserDAO;
 import main.com.pos.model.Sale;
+import main.com.pos.model.User;
 import main.com.pos.service.OrderService;
 
 /**
@@ -47,11 +49,15 @@ public class ReportPanel extends JPanel {
     private JLabel totalDiscountsValue;
     private JComboBox<String> filterTypeCombo;
     private String currentFilterDate = null;
+    private User currentUsers;
+    private final UserDAO userDAO;
 
     public ReportPanel() {
         this.orderService = new OrderService();
         this.reportDAO = new ReportDAO();
+        this.userDAO = new UserDAO();
         initUI();
+        applyFilter();
     }
 
     private void initUI() {
@@ -72,7 +78,8 @@ public class ReportPanel extends JPanel {
 
         add(mainPanel, BorderLayout.CENTER);
 
-        loadTodaysSales();
+        // Load all transactions initially
+        loadAllSales();
     }
 
 
@@ -88,7 +95,7 @@ public class ReportPanel extends JPanel {
         filterLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
         panel.add(filterLabel);
 
-        String[] filterTypes = {"Today", "Specific Date", "All Transactions"};
+        String[] filterTypes = {"All Transactions", "Today", "Specific Date"};
         filterTypeCombo = new JComboBox<>(filterTypes);
         filterTypeCombo.setPreferredSize(new Dimension(150, 32));
         filterTypeCombo.addActionListener(e -> onFilterTypeChanged());
@@ -100,6 +107,7 @@ public class ReportPanel extends JPanel {
         dateField = new JTextField(LocalDate.now().toString(), 12);
         dateField.setPreferredSize(new Dimension(120, 32));
         dateField.setHorizontalAlignment(SwingConstants.CENTER);
+        dateField.setEnabled(false); // Disabled initially for "All Transactions"
         panel.add(dateField);
 
         JButton applyBtn = createStyledButton("Apply Filter", new Color(59, 130, 246));
@@ -109,6 +117,18 @@ public class ReportPanel extends JPanel {
         JButton reportBtn = createStyledButton("Daily Report", new Color(16, 185, 129));
         reportBtn.addActionListener(e -> showDailyReport());
         panel.add(reportBtn);
+
+        JButton topProductsBtn = createStyledButton("Top Products", new Color(139, 92, 246));
+        topProductsBtn.addActionListener(e -> showTopProducts());
+        panel.add(topProductsBtn);
+
+        JButton categoriesBtn = createStyledButton("Categories", new Color(236, 72, 153));
+        categoriesBtn.addActionListener(e -> showCategoriesReport());
+        panel.add(categoriesBtn);
+
+        JButton usersBtn = createStyledButton("Users", new Color(245, 158, 11));
+        usersBtn.addActionListener(e -> showUserPerformance());
+        panel.add(usersBtn);
 
         return panel;
     }
@@ -250,7 +270,7 @@ public class ReportPanel extends JPanel {
         tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         tableTitle.setBorder(new EmptyBorder(0, 0, 12, 0));
 
-        String[] columns = {"Sale ID", "User ID", "Customer", "Date", "Total", "Discount", "Final Amount", "Payment"};
+        String[] columns = {"Sale ID", "Cashier", "Customer", "Date", "Total", "Discount", "Final Amount", "Payment"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
@@ -265,7 +285,6 @@ public class ReportPanel extends JPanel {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         reportTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // Sale ID
-        reportTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer); // User ID
         reportTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer); // Customer
 
         // Custom renderers for currency columns
@@ -301,31 +320,37 @@ public class ReportPanel extends JPanel {
     private void loadAllSales() {
         tableModel.setRowCount(0);
         currentFilterDate = null;
-        List<Sale> sales = orderService.getAllOrders();
+        
+        // Use ReportDAO to get detailed sales data for all time
+        List<Map<String, Object>> salesData = reportDAO.getAllDetailedSalesData();
+        
+        // If today has no data, fall back to OrderService for all transactions
+        if (salesData.isEmpty()) {
+            List<Sale> sales = orderService.getAllOrders();
+            double totalSales = 0;
+            double totalDiscounts = 0;
 
-        double totalSales = 0;
-        double totalDiscounts = 0;
+            for (Sale sale : sales) {
+                currentUsers = userDAO.getById(sale.getUserId());
+                tableModel.addRow(new Object[]{
+                    sale.getSaleId(),
+                    currentUsers.getName(),
+                    sale.getCustomerId() == 0 ? "Guest" : String.valueOf(sale.getCustomerId()),
+                    sale.getSaleDate().getDate(),
+                    sale.getTotal(),
+                    sale.getDiscount(),
+                    sale.getFinalTotal(),
+                    sale.getPaymentType()
+                });
+                totalSales += sale.getFinalTotal();
+                totalDiscounts += sale.getDiscount();
+            }
 
-        for (Sale sale : sales) {
-            tableModel.addRow(new Object[]{
-                sale.getSaleId(),
-                sale.getUserId(),
-                sale.getCustomerId() == 0 ? "Guest" : String.valueOf(sale.getCustomerId()),
-                sale.getSaleDate().getDate(),
-                sale.getTotal(),
-                sale.getDiscount(),
-                sale.getFinalTotal(),
-                sale.getPaymentType()
-            });
-            totalSales += sale.getFinalTotal();
-            totalDiscounts += sale.getDiscount();
-        }
-
-        updateMetrics(totalSales, sales.size(), 
-                     sales.isEmpty() ? 0 : totalSales / sales.size(), 
-                     totalDiscounts);
+            updateMetrics(totalSales, sales.size(), 
+                         sales.isEmpty() ? 0 : totalSales / sales.size(), 
+                         totalDiscounts);
+        } else loadSalesFromDAO(salesData);
     }
-
 
     private void filterByDate() {
         String dateText = dateField.getText().trim();
@@ -344,30 +369,65 @@ public class ReportPanel extends JPanel {
 
         currentFilterDate = date.toString();
         tableModel.setRowCount(0);
-        List<Sale> sales = orderService.getOrdersByDate(date);
+        
+        // Use ReportDAO to get detailed sales data with user and customer names
+        List<Map<String, Object>> salesData = reportDAO.getDetailedSalesData(currentFilterDate);
+        
+        if (!salesData.isEmpty()) {
+            loadSalesFromDAO(salesData);
+        } else {
+            // Fallback to OrderService if no data
+            List<Sale> sales = orderService.getOrdersByDate(date);
+            double totalSales = 0;
+            double totalDiscounts = 0;
+            int count = 0;
 
+            for (Sale sale : sales) {
+                tableModel.addRow(new Object[]{
+                    sale.getSaleId(),
+                    currentUsers.getName(),
+                    sale.getCustomerId() == 0 ? "Guest" : String.valueOf(sale.getCustomerId()),
+                    sale.getSaleDate().getDate(),
+                    sale.getTotal(),
+                    sale.getDiscount(),
+                    sale.getFinalTotal(),
+                    sale.getPaymentType()
+                });
+                count++;
+                totalSales += sale.getFinalTotal();
+                totalDiscounts += sale.getDiscount();
+            }
+
+            double avgTransaction = count > 0 ? totalSales / count : 0;
+            updateMetrics(totalSales, count, avgTransaction, totalDiscounts);
+        }
+    }
+
+    /**
+     * Load sales data from ReportDAO detailed sales data
+     */
+    private void loadSalesFromDAO(List<Map<String, Object>> salesData) {
+        tableModel.setRowCount(0);
         double totalSales = 0;
         double totalDiscounts = 0;
-        int count = 0;
 
-        for (Sale sale : sales) {
+        for (Map<String, Object> sale : salesData) {
             tableModel.addRow(new Object[]{
-                sale.getSaleId(),
-                sale.getUserId(),
-                sale.getCustomerId() == 0 ? "Guest" : String.valueOf(sale.getCustomerId()),
-                sale.getSaleDate().getDate(),
-                sale.getTotal(),
-                sale.getDiscount(),
-                sale.getFinalTotal(),
-                sale.getPaymentType()
+                sale.get("saleId"),
+                sale.get("cashierName"),  // Show cashier name instead of user ID
+                sale.get("customerName"),
+                sale.get("dateTime"),
+                sale.get("total"),
+                sale.get("discount"),
+                sale.get("finalAmount"),
+                sale.get("paymentType")
             });
-            count++;
-            totalSales += sale.getFinalTotal();
-            totalDiscounts += sale.getDiscount();
+            totalSales += (Double) sale.get("finalAmount");
+            totalDiscounts += (Double) sale.get("discount");
         }
 
-        double avgTransaction = count > 0 ? totalSales / count : 0;
-        updateMetrics(totalSales, count, avgTransaction, totalDiscounts);
+        double avgTransaction = salesData.isEmpty() ? 0 : totalSales / salesData.size();
+        updateMetrics(totalSales, salesData.size(), avgTransaction, totalDiscounts);
     }
 
     private void updateMetrics(double totalSales, int transactions, double avgTransaction, double totalDiscounts) {
@@ -383,14 +443,12 @@ public class ReportPanel extends JPanel {
     private void showDailyReport() {
         String date = currentFilterDate != null ? currentFilterDate : dateField.getText();
         Map<String, Object> report = reportDAO.getDailySalesReport(date);
-        Map<String, Integer> paymentDist = reportDAO.getPaymentTypeDistribution(date);
-        double discounts = reportDAO.getTotalDiscountsForDay(date);
-
-        // Create modern report panel
+        List<Map<String, Object>> paymentRevenue = reportDAO.getPaymentTypeRevenue(date);
+        // Create modern report panel with tabs or sections
         JPanel reportPanel = new JPanel(new BorderLayout(16, 16));
         reportPanel.setBackground(Color.WHITE);
         reportPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        reportPanel.setPreferredSize(new Dimension(500, 400));
+        reportPanel.setPreferredSize(new Dimension(650, 500));
 
         // Header
         JLabel headerLabel = new JLabel("📊 Daily Sales Report");
@@ -417,9 +475,9 @@ public class ReportPanel extends JPanel {
         addReportMetric(metricsPanel, "Total Sales:", String.format("$%.2f", (Double) report.get("totalSales")));
         addReportMetric(metricsPanel, "Transactions:", String.valueOf(report.get("totalTransactions")));
         addReportMetric(metricsPanel, "Average Value:", String.format("$%.2f", (Double) report.get("averageValue")));
-        addReportMetric(metricsPanel, "Total Discounts:", String.format("$%.2f", discounts));
+        addReportMetric(metricsPanel, "Total Discounts:", String.format("$%.2f", (Double) report.get("totalDiscounts")));
 
-        // Payment Distribution
+        // Payment Distribution with Revenue
         JPanel paymentPanel = new JPanel(new BorderLayout());
         paymentPanel.setOpaque(false);
         
@@ -427,17 +485,24 @@ public class ReportPanel extends JPanel {
         paymentTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
         paymentTitle.setBorder(new EmptyBorder(0, 0, 8, 0));
 
-        JPanel paymentList = new JPanel(new GridLayout(0, 2, 8, 8));
+        JPanel paymentList = new JPanel(new GridLayout(0, 3, 8, 8));
         paymentList.setOpaque(false);
         
-        for (Map.Entry<String, Integer> entry : paymentDist.entrySet()) {
-            JLabel keyLabel = new JLabel(entry.getKey() + ":");
-            keyLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            JLabel valueLabel = new JLabel(entry.getValue() + " transactions");
-            valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            valueLabel.setForeground(new Color(59, 130, 246));
-            paymentList.add(keyLabel);
-            paymentList.add(valueLabel);
+        for (Map<String, Object> payment : paymentRevenue) {
+            JLabel typeLabel = new JLabel(payment.get("paymentType") + ":");
+            typeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            
+            JLabel countLabel = new JLabel(payment.get("transactionCount") + " txns");
+            countLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            countLabel.setForeground(new Color(59, 130, 246));
+            
+            JLabel revenueLabel = new JLabel(String.format("$%.2f", payment.get("totalRevenue")));
+            revenueLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            revenueLabel.setForeground(new Color(16, 185, 129));
+            
+            paymentList.add(typeLabel);
+            paymentList.add(countLabel);
+            paymentList.add(revenueLabel);
         }
 
         paymentPanel.add(paymentTitle, BorderLayout.NORTH);
@@ -471,6 +536,142 @@ public class ReportPanel extends JPanel {
 
         panel.add(keyLabel);
         panel.add(valueLabel);
+    }
+
+    /* ================= TOP PRODUCTS REPORT ================= */
+
+    private void showTopProducts() {
+        String date = currentFilterDate != null ? currentFilterDate : LocalDate.now().toString();
+        List<Map<String, Object>> topProducts = reportDAO.getTopSellingProducts(date, date, 10);
+        
+        if (topProducts.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No product data available for this date.", 
+                "No Data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Create table for top products
+        String[] columns = {"#", "Product", "Category", "Qty Sold", "Revenue", "Transactions"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        int rank = 1;
+        for (Map<String, Object> product : topProducts) {
+            model.addRow(new Object[]{
+                rank++,
+                product.get("productName"),
+                product.get("categoryName"),
+                product.get("totalQuantity"),
+                String.format("$%.2f", product.get("totalRevenue")),
+                product.get("transactionCount")
+            });
+        }
+
+        JTable table = new JTable(model);
+        TableProduct.styleTable(table);
+        table.setRowHeight(35);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(700, 400));
+
+        JOptionPane.showMessageDialog(this, scrollPane, 
+            "Top 10 Products - " + date, JOptionPane.PLAIN_MESSAGE);
+    }
+
+    /* ================= CATEGORIES REPORT ================= */
+
+    private void showCategoriesReport() {
+        String date = currentFilterDate != null ? currentFilterDate : LocalDate.now().toString();
+        List<Map<String, Object>> categories = reportDAO.getSalesByCategory(date, date);
+        
+        if (categories.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No category data available for this date.", 
+                "No Data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Create table for categories
+        String[] columns = {"Category", "Items Sold", "Total Qty", "Revenue", "Avg Price"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        for (Map<String, Object> category : categories) {
+            model.addRow(new Object[]{
+                category.get("categoryName"),
+                category.get("itemsSold"),
+                category.get("totalQuantity"),
+                String.format("$%.2f", category.get("totalRevenue")),
+                String.format("$%.2f", category.get("avgPrice"))
+            });
+        }
+
+        JTable table = new JTable(model);
+        TableProduct.styleTable(table);
+        table.setRowHeight(35);
+        
+        // Right align currency columns
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        table.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+        table.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(650, 350));
+
+        JOptionPane.showMessageDialog(this, scrollPane, 
+            "Sales by Category - " + date, JOptionPane.PLAIN_MESSAGE);
+    }
+
+    /* ================= USER PERFORMANCE REPORT ================= */
+
+    private void showUserPerformance() {
+        String date = currentFilterDate != null ? currentFilterDate : LocalDate.now().toString();
+        List<Map<String, Object>> users = reportDAO.getUserPerformance(date, date);
+        
+        if (users.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No user performance data available for this date.", 
+                "No Data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Create table for user performance
+        String[] columns = {"Cashier", "Role", "Transactions", "Revenue", "Avg Sale", "Discounts"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        for (Map<String, Object> user : users) {
+            model.addRow(new Object[]{
+                user.get("name"),
+                user.get("role"),
+                user.get("transactionCount"),
+                String.format("$%.2f", user.get("totalRevenue")),
+                String.format("$%.2f", user.get("avgTransaction")),
+                String.format("$%.2f", user.get("totalDiscounts"))
+            });
+        }
+
+        JTable table = new JTable(model);
+        TableProduct.styleTable(table);
+        table.setRowHeight(35);
+        
+        // Right align currency columns
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        table.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+        table.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
+        table.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(750, 350));
+
+        JOptionPane.showMessageDialog(this, scrollPane, 
+            "User Performance - " + date, JOptionPane.PLAIN_MESSAGE);
     }
 
     /* ================= CUSTOM RENDERERS ================= */

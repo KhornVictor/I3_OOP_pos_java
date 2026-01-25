@@ -25,7 +25,7 @@ public class UserDetailPanel extends JPanel {
         this.currentUser = user;
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(350, 700));
-        setBackground(new Color(12, 30, 89)); // gray-100    
+        setBackground(new Color(37, 51, 106)); // gray-100    
         add(contentHeader("User Details"), BorderLayout.NORTH);
         add(contentMain(), BorderLayout.CENTER);
     }
