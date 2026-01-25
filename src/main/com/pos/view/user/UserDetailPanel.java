@@ -211,8 +211,6 @@ public class UserDetailPanel extends JPanel {
         String roleText = user != null && user.getRole() != null ? user.getRole() : "-";
         String addressText = user != null ? getAddressString(user.getUserId()) : "-";
         
-        
-        
         nameLabel.setText(nameText);
         idLabel.setText(idText);
         usernameValueLabel.setText(usernameText);
@@ -238,7 +236,7 @@ public class UserDetailPanel extends JPanel {
 
     private String getAddressString(int userId) {
         Address address = new AddressDAO().getById(userId);
-        if (address != null)  return String.format("%s, %s, %s", address.getStreet(), address.getCity(), address.getCountry());
+        if (address != null)  return String.format("<html>Street: %s<br>State: %s<br>City: %s<br>ZipCode: %s<br>Country: %s</html>", address.getStreet(), address.getState(), address.getCity(), address.getZipCode(),address.getCountry());
         return "-";
     }
 }

@@ -1,5 +1,6 @@
 package main.com.pos.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import main.com.pos.dao.OrderDAO;
@@ -98,6 +99,26 @@ public class OrderService {
             return new ArrayList<>();
         }
         return orderDAO.getOrdersByUser(userId);
+    }
+
+    public List<Sale> getOrdersByDate(LocalDate date) {
+        if (date == null) {
+            System.out.println("❌ Date cannot be null");
+            return new ArrayList<>();
+        }
+        return orderDAO.getOrdersByDate(date);
+    }
+
+    public List<Sale> getOrdersBetween(LocalDate from, LocalDate to) {
+        if (from == null || to == null) {
+            System.out.println("❌ Date range cannot be null");
+            return new ArrayList<>();
+        }
+        if (to.isBefore(from)) {
+            System.out.println("❌ End date must be after start date");
+            return new ArrayList<>();
+        }
+        return orderDAO.getOrdersBetween(from, to);
     }
 
     public double calculateOrderTotal(Sale sale) {

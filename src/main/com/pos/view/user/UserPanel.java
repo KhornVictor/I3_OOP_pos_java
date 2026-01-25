@@ -10,6 +10,7 @@ import main.com.pos.components.ui.TableUser;
 import main.com.pos.components.ui.UI;
 import main.com.pos.dao.UserDAO;
 import main.com.pos.model.User;
+import main.com.pos.util.Telegram;
 
 public class UserPanel extends JPanel {
     
@@ -20,6 +21,7 @@ public class UserPanel extends JPanel {
     private DefaultTableModel tableModel;
     private final UserDetailPanel userDetail;
     private final AddUserPanel addUserPanel;
+    private final UpdateUserPanel updateUserPanel;
     private final JPanel centerPanel;
     private final JPanel sidePanel;
     private User selectedUser;
@@ -41,6 +43,8 @@ public class UserPanel extends JPanel {
         // Initialize components first before using them
         userDetail = new UserDetailPanel(selectedUser);
         addUserPanel = new AddUserPanel();
+        addUserPanel.setOnUserAddedCallback(this::refreshAfterAdd);
+        updateUserPanel = new UpdateUserPanel(selectedUser);
         sidePanel = createSidePanel();
 
         add(createTopBar(), BorderLayout.NORTH);
@@ -81,7 +85,7 @@ public class UserPanel extends JPanel {
         left.add(statusBox);
 
         JComboBox<String> roleBox = createStyledComboBox(
-            new String[]{"All Roles", "Admin", "Staff", "Customer"}
+            new String[]{"All Roles", "Admin", "Staff", "Customer", "Cashier"}
         );
         roleBox.addActionListener(e -> {
             currentRoleFilter = roleBox.getSelectedItem().toString();
@@ -347,7 +351,10 @@ public class UserPanel extends JPanel {
                 int selectedRow = userTable.getSelectedRow();
                 if (selectedRow >= 0) {
                     selectedUser = currentFilteredUsers.get(selectedRow);
-                    userDetail.updateUser(selectedUser);
+                    sidePanel.removeAll();
+                    sidePanel.add(new UserDetailPanel(selectedUser), BorderLayout.CENTER);
+                    sidePanel.revalidate();
+                    sidePanel.repaint();
                 }
             }
         });
@@ -452,13 +459,27 @@ public class UserPanel extends JPanel {
             );
             return;
         }
-
-        JOptionPane.showMessageDialog(
-            this,
-            "Update User functionality will be implemented here.\nSelected User: " + selectedUser.getName(),
-            "Update User",
-            JOptionPane.INFORMATION_MESSAGE
-        );
+        
+        updateUserPanel.setUser(selectedUser);
+        updateUserPanel.setOnUserUpdatedCallback(this::refreshAfterUpdate);
+        
+        sidePanel.removeAll();
+        sidePanel.add(updateUserPanel, BorderLayout.CENTER);
+        sidePanel.revalidate();
+        sidePanel.repaint();
+    }
+    
+    private void refreshAfterUpdate() {
+        List<User> updatedUsers = userDAO.getAll();
+        allUsers.clear();
+        allUsers.addAll(updatedUsers);
+        applyFilters();
+        
+        // Switch back to user detail view
+        sidePanel.removeAll();
+        sidePanel.add(userDetail, BorderLayout.CENTER);
+        sidePanel.revalidate();
+        sidePanel.repaint();
     }
 
     private void handleDeleteUser() {
@@ -497,9 +518,19 @@ public class UserPanel extends JPanel {
         );
 
         if (choice == JOptionPane.YES_OPTION) {
-            userDAO.delete(selectedUser.getUserId());
+            Telegram.telegramSend(
+                "⛔ User Deleted \n\n" + 
+                String.format("User ID: %s\nName: %s\nEmail: %s\nRole: %s",
+                    selectedUser.getUserId(),
+                    selectedUser.getName(),
+                    selectedUser.getEmail(),
+                    selectedUser.getRole()
+                )
+            );
+            userDAO.deleteWithAddressCleanup(selectedUser.getUserId());
             allUsers.removeIf(user -> user.getUserId() == selectedUser.getUserId());
             applyFilters();
+            
         }
     }
 
@@ -509,5 +540,18 @@ public class UserPanel extends JPanel {
         allUsers.clear();
         allUsers.addAll(updatedUsers);
         applyFilters();
+    }
+
+    private void refreshAfterAdd() {
+        List<User> updatedUsers = userDAO.getAll();
+        allUsers.clear();
+        allUsers.addAll(updatedUsers);
+        currentStatusFilter = "All Status";
+        currentRoleFilter = "All Roles";
+        applyFilters();
+        sidePanel.removeAll();
+        sidePanel.add(userDetail, BorderLayout.CENTER);
+        sidePanel.revalidate();
+        sidePanel.repaint();
     }
 }

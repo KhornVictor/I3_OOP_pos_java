@@ -8,6 +8,8 @@ public class Address {
     private String zipCode;
     private String country;
 
+    public Address() {}
+
     public Address(int addressId, String street, String city, String state, String zipCode, String country) {
         this.addressId = addressId;
         setStreet(street);

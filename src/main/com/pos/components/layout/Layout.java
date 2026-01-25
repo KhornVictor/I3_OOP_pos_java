@@ -43,11 +43,8 @@ public class Layout extends JFrame {
 
     public static void main(String[] args) {
         // For testing purposes
-        User testUser = new User();
-        testUser.setUsername("admin");
-        testUser.setRole("Administrator");
-        
-        Layout layout = new Layout(testUser);
-        layout.setVisible(true);
+        User testUser = new User( 1, "victor", "123456", "Admin", "Victor Smith", "victor@example.com", 1, "images/avatar/default.png" );
+        Layout app = new Layout(testUser);
+        app.setVisible(true);
     }
 }

@@ -109,6 +109,28 @@ public class DragDropImage extends JPanel {
             return "images" + File.separator + "product" + File.separator + destFilename;
         } catch (IOException e) {   
             JOptionPane.showMessageDialog(this, "Error saving image: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            System.out.println("Error saving image: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public String saveImageUserToResources(String destFilename) {
+        if (selectedFile == null) {
+            JOptionPane.showMessageDialog(this, "No image selected", "Warning", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+        try {
+            String resourcesPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "com" + File.separator + "pos" + File.separator + "resources" + File.separator + "images" + File.separator + "avatar";
+            File resourcesDir = new File(resourcesPath);
+            if (!resourcesDir.exists()) resourcesDir.mkdirs();
+            File destinationFile = new File(resourcesDir, destFilename);
+            
+            // Copy the selected file to resources
+            Files.copy(selectedFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            
+            return "images" + File.separator + "avatar" + File.separator + destFilename;
+        } catch (IOException e) {   
+            JOptionPane.showMessageDialog(this, "Error saving image: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return null;
         }
     }
@@ -133,7 +155,7 @@ public class DragDropImage extends JPanel {
         
         try {
             // Handle relative paths like "/images/product/filename.png"
-            String resourcesPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "com" + File.separator + "pos" + File.separator + "resources";
+            String resourcesPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "com" + File.separator + "pos" + File.separator + "resources" + File.separator;
             String cleanPath = imagePath.replace("/", File.separator);
             File imageFile = new File(resourcesPath + cleanPath);
             

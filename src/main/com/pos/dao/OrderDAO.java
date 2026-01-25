@@ -20,9 +20,12 @@ public class OrderDAO {
         String sql = "INSERT INTO Sale (UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            DateTime dateTime = sale.getSaleDate() != null ? sale.getSaleDate() : new DateTime();
+
             preparedStatement.setInt(1, sale.getUserId());
-            preparedStatement.setString(2, sale.getSaleDate().getDate().toString());
-            preparedStatement.setString(3, sale.getSaleDate().getTime().toString());
+            preparedStatement.setString(2, dateTime.getDate().toString());
+            preparedStatement.setString(3, dateTime.getTime().toString());
             preparedStatement.setInt(4, sale.getCustomerId());
             preparedStatement.setDouble(5, sale.getTotal());
             preparedStatement.setDouble(6, sale.getDiscount());
@@ -61,7 +64,7 @@ public class OrderDAO {
     }
 
     public Sale getOrderById(int saleId) {
-        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale WHERE SaleID = ?";
+        String sql = "SELECT SaleID, UserID, SaleDate, CustomerID, Total, Discount, PaymentType FROM Sale WHERE SaleID = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, saleId);
@@ -125,11 +128,52 @@ public class OrderDAO {
         return orders;
     }
 
+    public List<Sale> getOrdersByDate(LocalDate date) {
+        List<Sale> orders = new ArrayList<>();
+        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale WHERE DATE(SaleDate) = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, date.toString());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    orders.add(mapSaleRow(resultSet));
+                }
+            }
+        } catch (SQLException error) {
+            System.out.println("❌ getOrdersByDate error: " + error.getMessage());
+        }
+        return orders;
+    }
+
+    public List<Sale> getOrdersBetween(LocalDate from, LocalDate to) {
+        List<Sale> orders = new ArrayList<>();
+        String sql = "SELECT SaleID, UserID, SaleDate, SaleTime, CustomerID, Total, Discount, PaymentType FROM Sale WHERE DATE(SaleDate) BETWEEN ? AND ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, from.toString());
+            preparedStatement.setString(2, to.toString());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    orders.add(mapSaleRow(resultSet));
+                }
+            }
+        } catch (SQLException error) {
+            System.out.println("❌ getOrdersBetween error: " + error.getMessage());
+        }
+        return orders;
+    }
+
     private Sale mapSaleRow(ResultSet resultSet) throws SQLException {
         int saleId = resultSet.getInt("SaleID");
         int userId = resultSet.getInt("UserID");
         LocalDate date = LocalDate.parse(resultSet.getString("SaleDate"));
-        LocalTime time = LocalTime.parse(resultSet.getString("SaleTime"));
+        String timeStr = null;
+        try {
+            timeStr = resultSet.getString("SaleTime");
+        } catch (SQLException ignored) {
+            // Column might be missing if schema older; fall back to midnight
+        }
+        LocalTime time = timeStr != null ? LocalTime.parse(timeStr) : LocalTime.MIDNIGHT;
         DateTime dateTime = new DateTime(date, time);
         int customerId = resultSet.getInt("CustomerID");
         double total = resultSet.getDouble("Total");

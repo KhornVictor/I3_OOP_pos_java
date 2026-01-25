@@ -18,6 +18,7 @@ import main.com.pos.model.User;
 import main.com.pos.view.dashboard.DashboardPanel;
 import main.com.pos.view.inventory.InventoryDashboardPanel;
 import main.com.pos.view.product.ProductPanel;
+import main.com.pos.view.report.ReportPanel;
 import main.com.pos.view.setting.SettingPanel;
 import main.com.pos.view.user.UserPanel;
 
@@ -148,6 +149,7 @@ public class SideBar extends JPanel {
                     System.out.println("Reports menu clicked");
                     navigation.setTitle("Reports");
                     contentPanel.removeAll();
+                    contentPanel.add(new ReportPanel(), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }
@@ -200,6 +202,12 @@ public class SideBar extends JPanel {
             new Color(245, 38, 33),
             new Color(174, 18, 13), new Color(245, 38, 33), new Color(245, 38, 33));
         logoutButton.setPreferredSize(new Dimension(240, 40));
+        
+        // Add logout functionality
+        logoutButton.addActionListener(e -> {
+            handleLogout(navigation);
+        });
+        
         footerPanel.add(logoutButton);
         add(footerPanel, BorderLayout.SOUTH);
     }
@@ -212,6 +220,26 @@ public class SideBar extends JPanel {
             }
             activButton = targetButton;
             targetButton.setActive(true);
+        }
+    }
+
+    private void handleLogout(Navigation navigation) {
+        // Clear user session
+        this.user = null;
+        
+        // Get the root frame
+        javax.swing.JFrame frame = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
+        
+        if (frame != null) {
+            // Dispose the current dashboard frame
+            frame.dispose();
+            
+            // Show login frame
+            main.com.pos.view.login.LoginFrame loginFrame = new main.com.pos.view.login.LoginFrame();
+            loginFrame.setVisible(true);
+            loginFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+            
+            System.out.println("✅ User logged out successfully");
         }
     }
 }

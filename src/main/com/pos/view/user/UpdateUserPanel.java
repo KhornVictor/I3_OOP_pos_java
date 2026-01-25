@@ -4,13 +4,15 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
 import javax.swing.*;
+import main.com.pos.dao.AddressDAO;
 import main.com.pos.dao.UserDAO;
 import main.com.pos.model.Address;
 import main.com.pos.model.User;
+import main.com.pos.util.DeleteImage;
 import main.com.pos.util.DragDropImage;
 import main.com.pos.util.Telegram;
 
-public class AddUserPanel extends JPanel {
+public class UpdateUserPanel extends JPanel {
     
     @SuppressWarnings("unused")
     private JPanel contentPanel;
@@ -29,10 +31,14 @@ public class AddUserPanel extends JPanel {
     private JButton saveButton;
     private JButton cancelButton;
     private JPanel formPanel;
-    private Runnable onUserAddedCallback;
+    private Runnable onUserUpdatedCallback;
+    private User currentUser;
+    private Address currentAddress;
 
     
-    public AddUserPanel() {
+    public UpdateUserPanel(User user) {
+        this.currentUser = user;
+        this.currentAddress = (user != null && user.getAddressId() > 0) ? new AddressDAO().getById(user.getAddressId()) : null;
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(350, Integer.MAX_VALUE));
         setBackground(new Color(250, 251, 253));
@@ -41,12 +47,65 @@ public class AddUserPanel extends JPanel {
         add(createHeaderPanel(), BorderLayout.NORTH);
         add(createContentPanel(), BorderLayout.CENTER);
         add(createActionsPanel(), BorderLayout.SOUTH);
+
+        // Prefill fields once UI components are ready
+        loadUserData();
+    }
+    
+    /* ==================== SET USER ==================== */
+    public void setUser(User user) {
+        this.currentUser = user;
+        if (user != null) loadUserData();
+    }
+    
+    /* ==================== LOAD USER DATA ==================== */
+    private void loadUserData() {
+        if (currentUser == null) return;
+        
+        nameField.setText(currentUser.getName());
+        usernameField.setText(currentUser.getUsername());
+        emailField.setText(currentUser.getEmail());
+        passwordField.setText(currentUser.getPassword());
+        
+        if (currentUser.getRole() != null) roleCombo.setSelectedItem(currentUser.getRole());
+        
+        if (currentUser.getAddressId() > 0) {
+            AddressDAO addressDAO = new AddressDAO();
+            currentAddress = addressDAO.getById(currentUser.getAddressId());
+            if (currentAddress != null) {
+                streetField.setText(currentAddress.getStreet());
+                cityField.setText(currentAddress.getCity());
+                stateField.setText(currentAddress.getState());
+                zipCodeField.setText(currentAddress.getZipCode());
+                countryField.setText(currentAddress.getCountry());
+            } else {
+                streetField.setText("");
+                cityField.setText("");
+                stateField.setText("");
+                zipCodeField.setText("");
+                countryField.setText("");
+            }
+        } else {
+            streetField.setText("");
+            cityField.setText("");
+            stateField.setText("");
+            zipCodeField.setText("");
+            countryField.setText("");
+            currentAddress = null;
+        }
+        
+        // Set image
+        if (currentUser.getImage() != null && !currentUser.getImage().isEmpty()) {
+            imagePanel.setImageFromPath(currentUser.getImage());
+        } else {
+            imagePanel.resetImage();
+        }
     }
     
     /* ==================== SET CALLBACK ==================== */
-    public void setOnUserAddedCallback(Runnable callback) {
-        this.onUserAddedCallback = callback;
-    }   
+    public void setOnUserUpdatedCallback(Runnable callback) {
+        this.onUserUpdatedCallback = callback;
+    }
     
     /* ==================== HEADER PANEL ==================== */
     private JPanel createHeaderPanel() {
@@ -65,7 +124,7 @@ public class AddUserPanel extends JPanel {
         headerPanel.setPreferredSize(new Dimension(350, 60));
         headerPanel.setLayout(new BorderLayout());
         
-        JLabel titleLabel = new JLabel("Add New User");
+        JLabel titleLabel = new JLabel("Update User");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -120,7 +179,7 @@ public class AddUserPanel extends JPanel {
     
     /* ==================== IMAGE PANEL ==================== */
     private DragDropImage createImagePanel() {
-        DragDropImage panel = new DragDropImage(290, 180, "images/avatar/default.png");
+        DragDropImage panel = new DragDropImage(290, 180, "avatar_default.png");
         panel.setOpaque(false);
         // Size aligned with requested drag-drop dimensions
         panel.setPreferredSize(new Dimension(290, 180));
@@ -131,44 +190,44 @@ public class AddUserPanel extends JPanel {
     /* ==================== FORM PANEL ==================== */
     private JPanel createFormPanel() {
 
-        this.formPanel.setOpaque(false);
-        this.formPanel.setLayout(new BoxLayout(this.formPanel, BoxLayout.Y_AXIS));
+        formPanel.setOpaque(false);
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         
         // User form fields
-        this.formPanel.add(createFormField("Full Name", "nameField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("Username", "usernameField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("Email", "emailField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("Phone", "phoneField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("Password", "passwordField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createRoleFieldCompact());
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        formPanel.add(createFormField("Full Name", "nameField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("Username", "usernameField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("Email", "emailField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("Phone", "phoneField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("Password", "passwordField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createRoleFieldCompact());
+        formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         
         // Address section
         JLabel addressSectionLabel = new JLabel("Address (Optional)");
         addressSectionLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         addressSectionLabel.setForeground(new Color(31, 41, 55));
         addressSectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        this.formPanel.add(addressSectionLabel);
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        formPanel.add(addressSectionLabel);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         
-        this.formPanel.add(createFormField("Street", "streetField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("City", "cityField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("State", "stateField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("Zip Code", "zipCodeField"));
-        this.formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        this.formPanel.add(createFormField("Country", "countryField"));
+        formPanel.add(createFormField("Street", "streetField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("City", "cityField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("State", "stateField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("Zip Code", "zipCodeField"));
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(createFormField("Country", "countryField"));
         
-        this.formPanel.add(Box.createVerticalGlue());
+        formPanel.add(Box.createVerticalGlue());
 
-        return this.formPanel;
+        return formPanel;
     }
     
     /* ==================== CREATE FORM FIELD ==================== */
@@ -368,11 +427,15 @@ public class AddUserPanel extends JPanel {
         
         // Cancel Button
         cancelButton = createModernButton("Cancel", new Color(229, 231, 235), new Color(107, 114, 128));
-        cancelButton.addActionListener(e -> clearForm());
+        cancelButton.addActionListener(e -> {
+            if (currentUser != null) {
+                loadUserData(); // Reset to original values
+            }
+        });
         
         // Save Button
-        saveButton = createModernButton("Save User", new Color(34, 139, 34), Color.WHITE);
-        saveButton.addActionListener(e -> saveUser());
+        saveButton = createModernButton("Update User", new Color(34, 139, 34), Color.WHITE);
+        saveButton.addActionListener(e -> updateUser());
         
         actionsPanel.add(cancelButton);
         actionsPanel.add(saveButton);
@@ -423,7 +486,12 @@ public class AddUserPanel extends JPanel {
         return button;
     }
     
-    private void saveUser() {
+    private void updateUser() {
+        if (currentUser == null) {
+            showError("No user selected to update!");
+            return;
+        }
+        
         String name = nameField.getText().trim();
         String username = usernameField.getText().trim();
         String email = emailField.getText().trim();
@@ -462,97 +530,74 @@ public class AddUserPanel extends JPanel {
         }
         
         try {
-            User newUser = new User();
-            newUser.setUserId(0);
-            newUser.setUsername(username);
-            newUser.setName(name);
-            newUser.setEmail(email);
-            newUser.setPassword(password);
-            newUser.setRole(role);
-            imagePanel.saveImageUserToResources(username + ".png");
-            newUser.setImage("/images/avatar/" + username + ".png");
-
-            Address address = new Address();
-            address.setStreet(street);
-            address.setCity(city);
-            address.setState(state);
-            address.setZipCode(zipCode);
-            address.setCountry(country);
-
+            String previous_name = currentUser.getUsername();
+            // Update user object
+            currentUser.setUsername(username);
+            currentUser.setName(name);
+            currentUser.setEmail(email);
+            currentUser.setPassword(password);
+            currentUser.setRole(role);
             
-            // Then create user with address reference
+            String imagePath = (String) imagePanel.getSelectedImagePath();
+            if (imagePath != null && !imagePath.isEmpty()) {
+                imagePanel.saveImageUserToResources(username.toLowerCase().replaceAll("\\s+", "_") + ".png");
+                if (!currentUser.getUsername().equals(previous_name)) DeleteImage.deleteImage("/images/avatar/" + previous_name.toLowerCase().replaceAll("\\s+", "_") + ".png");
+                currentUser.setImage("/images/avatar/" + username.toLowerCase().replaceAll("\\s+", "_") + ".png");
+            }
+            
+            // Handle address update
+            Address updatedAddress = null;
+            boolean anyAddressFieldProvided = !street.isEmpty() || !city.isEmpty() || !state.isEmpty() || !zipCode.isEmpty() || !country.isEmpty();
+            boolean allAddressFieldsProvided = !street.isEmpty() && !city.isEmpty() && !state.isEmpty() && !zipCode.isEmpty() && !country.isEmpty();
+
+            // If some address fields are provided but not all, block the update
+            if (anyAddressFieldProvided && !allAddressFieldsProvided) {
+                showError("Please complete all address fields or leave them empty to remove the address.");
+                return;
+            }
+
+            if (!anyAddressFieldProvided) currentUser.setAddressId(0);
+            else {
+                updatedAddress = new Address();
+                if (currentAddress != null) {
+                    updatedAddress.setAddressId(currentAddress.getAddressId());
+                    currentUser.setAddressId(currentAddress.getAddressId());
+                } else currentUser.setAddressId(0);
+                updatedAddress.setStreet(street);
+                updatedAddress.setCity(city);
+                updatedAddress.setState(state);
+                updatedAddress.setZipCode(zipCode);
+                updatedAddress.setCountry(country);
+            }
+            
             UserDAO userDAO = new UserDAO();
-            if (userDAO.createUserWithAddress(newUser, address) > 0) {
-                showSuccess("User added successfully!");
+            if (userDAO.updateUser(currentUser, updatedAddress)) {
+                showSuccess("User updated successfully!");
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("👤 New User Added:\n\n");
-                stringBuilder.append("Name: ");
-                stringBuilder.append(newUser.getName());
-                stringBuilder.append("\n");
-                stringBuilder.append("Username: ");
-                stringBuilder.append(username);
-                stringBuilder.append("\n");
-                stringBuilder.append("Email: ");
-                stringBuilder.append(newUser.getEmail());
-                stringBuilder.append("\n");
-                stringBuilder.append("Phone: ");
-                stringBuilder.append(phone);
-                stringBuilder.append("\n");
-                stringBuilder.append("Role: ");
-                stringBuilder.append(newUser.getRole());
-                stringBuilder.append("\n");
-                if (!street.isEmpty() || !city.isEmpty() || !state.isEmpty() || !zipCode.isEmpty() || !country.isEmpty()) {
-                    stringBuilder.append("Address: ");
-                    stringBuilder.append(street);
+                stringBuilder.append("✏️ User Updated:\n\n");
+                stringBuilder.append("Name: ").append(currentUser.getName()).append("\n");
+                stringBuilder.append("Username: ").append(username).append("\n");
+                stringBuilder.append("Email: ").append(currentUser.getEmail()).append("\n");
+                stringBuilder.append("Phone: ").append(phone).append("\n");
+                stringBuilder.append("Role: ").append(currentUser.getRole()).append("\n");
+                if (updatedAddress != null) {
+                    stringBuilder.append("Address: ").append(street);
                     if (!city.isEmpty()) stringBuilder.append(", ").append(city);
                     if (!state.isEmpty()) stringBuilder.append(", ").append(state);
-                    if (!zipCode.isEmpty()) stringBuilder.append(" ").append(zipCode);
-                    if (!country.isEmpty()) stringBuilder.append(", ").append(country);          
+                    if (!zipCode.isEmpty()) stringBuilder.append(", ").append(zipCode);
+                    if (!country.isEmpty()) stringBuilder.append(", ").append(country);
                     stringBuilder.append("\n");
                 }
                 Telegram.telegramSend(stringBuilder.toString());
-                clearForm();
-                if (onUserAddedCallback != null) onUserAddedCallback.run();
-            } else  showError("Failed to add user. Please try again.");
-        } catch (IllegalArgumentException e) {
-            showError("Invalid input: " + e.getMessage());
-        } catch (SQLException e) {
-            showError("Database error: " + e.getMessage());
-        }
-    }
-    
-    /* ==================== CLEAR FORM ==================== */
-    private void clearForm() {
-        nameField.setText("");
-        usernameField.setText("");
-        emailField.setText("");
-        phoneField.setText("");
-        passwordField.setText("");
-        roleCombo.setSelectedIndex(0);
-        streetField.setText("");
-        cityField.setText("");
-        stateField.setText("");
-        zipCodeField.setText("");
-        countryField.setText("");
-        imagePanel.resetImage();
-        imagePanel.repaint();
-        nameField.requestFocus();
+                
+                if (onUserUpdatedCallback != null) onUserUpdatedCallback.run();
+            } else showError("Failed to update user. Please try again.");
+        } catch (IllegalArgumentException e) { showError("Invalid input: " + e.getMessage()); } 
+        catch (SQLException e) { showError("Database error: " + e.getMessage()); }
     }
     
     /* ==================== SHOW MESSAGES ==================== */
-    private void showSuccess(String message) {
-         JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-    }
-    
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Add User Panel Test");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 600);
-        frame.add(new AddUserPanel());
-        frame.setVisible(true);
-    }
+    private void showSuccess(String message) { JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE); }
+    private void showError(String message) { JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE); }
 }
+
