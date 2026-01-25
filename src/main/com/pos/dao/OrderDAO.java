@@ -27,7 +27,12 @@ public class OrderDAO {
             // Combine date and time into a single DATETIME string for SaleDate
             String saleDateTime = dateTime.getDate().toString() + " " + dateTime.getTime().toString();
             preparedStatement.setString(2, saleDateTime);
-            preparedStatement.setInt(3, sale.getCustomerId());
+            // If no customer selected (<=0), insert NULL to avoid FK constraint failure
+            if (sale.getCustomerId() <= 0) {
+                preparedStatement.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                preparedStatement.setInt(3, sale.getCustomerId());
+            }
             preparedStatement.setDouble(4, sale.getTotal());
             preparedStatement.setDouble(5, sale.getDiscount());
             preparedStatement.setString(6, sale.getPaymentType());

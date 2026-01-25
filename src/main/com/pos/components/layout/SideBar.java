@@ -160,7 +160,7 @@ public class SideBar extends JPanel {
                     System.out.println("new sale menu clicked");
                     navigation.setTitle("NewSale");
                     contentPanel.removeAll();
-                    contentPanel.add(new NewSale(), BorderLayout.CENTER);
+                    contentPanel.add(new NewSale(user), BorderLayout.CENTER);
                     contentPanel.revalidate();
                     contentPanel.repaint();
                 }

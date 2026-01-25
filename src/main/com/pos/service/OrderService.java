@@ -12,6 +12,7 @@ public class OrderService {
     private final OrderDAO orderDAO;
     private final ProductDAO productDAO;
     private final ProductService productService;
+    private String lastError = "";
 
     public OrderService() {
         this.orderDAO = new OrderDAO();
@@ -37,7 +38,8 @@ public class OrderService {
             }
             return saleId;
         } catch (Exception e) {
-            System.out.println("❌ Error creating order: " + e.getMessage());
+            lastError = "Error creating order: " + e.getMessage();
+            System.out.println("❌ " + lastError);
             return -1;
         }
     }
@@ -54,16 +56,25 @@ public class OrderService {
         try {
             // Check stock availability
             if (!productService.checkStockAvailability(item.getProductId(), item.getQuantity())) {
-                System.out.println("❌ Insufficient stock for product: " + item.getProductId());
+                lastError = "Insufficient stock for product: " + item.getProductId();
+                System.out.println("❌ " + lastError);
                 return false;
             }
             // Add item to order
-            return orderDAO.addOrderItem(item);
+            boolean added = orderDAO.addOrderItem(item);
+            if (!added) {
+                lastError = "Failed to add item to order: ProductID=" + item.getProductId();
+                System.out.println("❌ " + lastError);
+            }
+            return added;
         } catch (IllegalArgumentException e) {
-            System.out.println("❌ Validation error: " + e.getMessage());
+            lastError = "Validation error: " + e.getMessage();
+            System.out.println("❌ " + lastError);
             return false;
         }
     }
+
+    public String getLastError() { return lastError; }
 
     public Sale getOrder(int saleId) {
         if (saleId <= 0) {
