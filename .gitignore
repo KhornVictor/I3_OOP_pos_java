@@ -26,3 +26,6 @@ Thumbs.db
 
 # Application resources to keep local only
 src/main/com/pos/resources/images/
+
+# Receipts
+receipts/

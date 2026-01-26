@@ -11,7 +11,12 @@ import javax.swing.border.EmptyBorder;
 import main.com.pos.dao.CategoryDAO;
 import main.com.pos.dao.ProductDAO;
 import main.com.pos.model.Category;
+import main.com.pos.model.DateTime;
 import main.com.pos.model.Product;
+import main.com.pos.model.Sale;
+import main.com.pos.model.SaleItem;
+import main.com.pos.model.User;
+import main.com.pos.service.OrderService;
 
 
 public class NewSale extends JPanel {
@@ -28,87 +33,22 @@ public class NewSale extends JPanel {
     private String selectedCategory = "All";
     private JTextField searchField;
     private String searchText = "";
+    private User currentUser = null;
 
     public NewSale() {
+        this(null);
+    }
+
+    public NewSale(User user) {
         setLayout(new BorderLayout());
+        this.currentUser = user;
         setBackground(new Color(247, 249, 251));
         setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        // Top bar (modern style)
-        JPanel topBar = new JPanel(new BorderLayout(10, 0));
+        // Top bar (just spacing, no label or search)
+        JPanel topBar = new JPanel();
         topBar.setBackground(new Color(245, 247, 250));
-        topBar.setBorder(new EmptyBorder(20, 32, 20, 32));
-
-        JLabel title = new JLabel("NewSale");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        topBar.add(title, BorderLayout.WEST);
-
-        // Search bar (center)
-        JPanel searchPanel = new JPanel(new BorderLayout(5, 0));
-        searchPanel.setOpaque(false);
-        searchField = new JTextField();
-        searchField.setPreferredSize(new Dimension(320, 32));
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220)),
-            new EmptyBorder(0, 16, 0, 8)));
-        searchField.setText("");
-        JLabel searchIcon = new JLabel(new ImageIcon("src/main/com/pos/resources/images/icons/search.png"));
-        searchPanel.add(searchIcon, BorderLayout.WEST);
-        searchPanel.add(searchField, BorderLayout.CENTER);
-        topBar.add(searchPanel, BorderLayout.CENTER);
-        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
-            private void updateSearch() {
-                searchText = searchField.getText().trim().toLowerCase();
-                updateProductGrid();
-            }
-        });
-
-        // Notification and user info (right)
-        JPanel rightTopPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 18, 0));
-        rightTopPanel.setOpaque(false);
-        JLabel notificationIcon = new JLabel(new ImageIcon("src/main/com/pos/resources/images/icons/bell.png"));
-        notificationIcon.setToolTipText("Notifications");
-        JPanel notificationPanel = new JPanel(null);
-        notificationPanel.setOpaque(false);
-        notificationPanel.setPreferredSize(new Dimension(32, 32));
-        notificationIcon.setBounds(6, 2, 24, 28);
-        notificationPanel.add(notificationIcon);
-        JLabel badge = new JLabel();
-        badge.setOpaque(true);
-        badge.setBackground(new Color(231, 76, 60));
-        badge.setBounds(22, 2, 10, 10);
-        badge.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
-        badge.setPreferredSize(new Dimension(10, 10));
-        badge.setText("");
-        notificationPanel.add(badge);
-        rightTopPanel.add(notificationPanel);
-
-        // User info (right)
-        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        userPanel.setOpaque(false);
-        JLabel userName = new JLabel("Khorn Victor");
-        userName.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        JLabel userRole = new JLabel("admin");
-        userRole.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        userRole.setForeground(new Color(120, 120, 120));
-        JPanel userTextPanel = new JPanel();
-        userTextPanel.setLayout(new BoxLayout(userTextPanel, BoxLayout.Y_AXIS));
-        userTextPanel.setOpaque(false);
-        userTextPanel.add(userName);
-        userTextPanel.add(userRole);
-        JLabel avatar = new JLabel();
-        avatar.setOpaque(true);
-        avatar.setBackground(new Color(33, 150, 243));
-        avatar.setPreferredSize(new Dimension(38, 38));
-        avatar.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true));
-        userPanel.add(userTextPanel);
-        userPanel.add(avatar);
-        rightTopPanel.add(userPanel);
-        topBar.add(rightTopPanel, BorderLayout.EAST);
+        topBar.setBorder(new EmptyBorder(20, 32, 0, 32));
         add(topBar, BorderLayout.NORTH);
 
         // Center panel (categories + products)
@@ -117,15 +57,67 @@ public class NewSale extends JPanel {
         centerPanel.setBackground(new Color(247, 249, 251));
         centerPanel.setBorder(new EmptyBorder(16, 32, 16, 16));
 
-        // Category bar (dynamic)
+        // Category bar (search first, then filter)
         JPanel categoryBar = new JPanel();
         categoryBar.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 0));
         categoryBar.setOpaque(false);
+
+        // Search field (real-time filtering)
+        searchField = new JTextField();
+        searchField.setPreferredSize(new Dimension(160, 32));
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        searchField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220)),
+            new EmptyBorder(0, 8, 0, 8)));
+        // Placeholder logic: 'Search product'
+        String placeholder = "Search product";
+        searchField.setForeground(new Color(150, 150, 150));
+        searchField.setText(placeholder);
+        searchField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchField.getText().equals(placeholder)) {
+                    searchField.setText("");
+                    searchField.setForeground(new Color(30, 30, 30));
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchField.getText().isEmpty()) {
+                    searchField.setForeground(new Color(150, 150, 150));
+                    searchField.setText(placeholder);
+                }
+            }
+        });
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
+            private void updateSearch() {
+                String text = searchField.getText();
+                if (text.equals(placeholder)) {
+                    searchText = "";
+                } else {
+                    searchText = text.trim().toLowerCase();
+                }
+                updateProductGrid();
+            }
+        });
+        categoryBar.add(searchField);
+
+        // Category filter
         categoryComboBox = new JComboBox<>();
         categoryComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         categoryComboBox.setPreferredSize(new Dimension(180, 32));
         categoryBar.add(categoryComboBox);
-        centerPanel.add(categoryBar, BorderLayout.NORTH);
+
+        // Add a vertical gap below the bar
+        JPanel barWithGap = new JPanel();
+        barWithGap.setLayout(new BorderLayout());
+        barWithGap.setOpaque(false);
+        barWithGap.add(categoryBar, BorderLayout.NORTH);
+        barWithGap.add(Box.createVerticalStrut(16), BorderLayout.CENTER);
+        centerPanel.add(barWithGap, BorderLayout.NORTH);
 
         // Product grid
         productGrid = new JPanel(new GridLayout(0, 4, 24, 16));
@@ -194,56 +186,37 @@ public class NewSale extends JPanel {
         cashBtn.setForeground(Color.WHITE);
         cashBtn.setFocusPainted(false);
         cashBtn.addActionListener(e -> {
-            if (cart.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
-            } else if (!isCartStockAvailable()) {
-                // Stock validation failed
-            } else {
-                handleCheckout("cash");
-            }
+            showReceiptPanel();
         });
-        JButton qrBtn = new JButton("QR");
-        qrBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        qrBtn.setBackground(new Color(59, 130, 246));
-        qrBtn.setForeground(Color.WHITE);
-        qrBtn.setFocusPainted(false);
-        qrBtn.addActionListener(e -> {
-            if (cart.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
-            } else if (!isCartStockAvailable()) {
-                // Stock validation failed
-            } else {
-                showQRDialog();
-            }
+        JButton cardBtn = new JButton("Card");
+        cardBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        cardBtn.setBackground(new Color(59, 130, 246));
+        cardBtn.setForeground(Color.WHITE);
+        cardBtn.setFocusPainted(false);
+        cardBtn.addActionListener(e -> {
+            showReceiptPanel();
         });
         paymentPanel.add(cashBtn);
-        paymentPanel.add(qrBtn);
+        paymentPanel.add(cardBtn);
         checkoutPanel.add(paymentPanel);
         checkoutPanel.add(Box.createVerticalStrut(8));
 
-        // Add Done button below payment options
-        JButton doneBtn = new JButton("Done");
-        doneBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        doneBtn.setBackground(new Color(33, 150, 243));
-        doneBtn.setForeground(Color.WHITE);
-        doneBtn.setFocusPainted(false);
-        doneBtn.setPreferredSize(new Dimension(Short.MAX_VALUE, 44));
-        doneBtn.setMaximumSize(new Dimension(Short.MAX_VALUE, 44));
-        doneBtn.setMinimumSize(new Dimension(10, 44));
-        doneBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        doneBtn.addActionListener(e -> {
-            if (cart.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
-            } else if (!isCartStockAvailable()) {
-                // Stock validation failed
-            } else {
-                handleCheckout("cash");
-            }
+        // QR code
+        JPanel qrPanel = new JPanel(new BorderLayout());
+        qrPanel.setOpaque(false);
+        JLabel qrLabel = new JLabel(new ImageIcon("src/main/com/pos/resources/images/qr_checkout.png"));
+        qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        qrPanel.add(qrLabel, BorderLayout.CENTER);
+        JButton qrDoneBtn = new JButton("Done");
+        qrDoneBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        qrDoneBtn.setBackground(new Color(33, 150, 243));
+        qrDoneBtn.setForeground(Color.WHITE);
+        qrDoneBtn.setFocusPainted(false);
+        qrDoneBtn.addActionListener(e -> {
+            showReceiptPanel();
         });
-        // Remove side padding from checkoutPanel to allow full width
-        checkoutPanel.setBorder(new EmptyBorder(16, 0, 0, 0));
-        checkoutPanel.add(doneBtn);
-        checkoutPanel.add(Box.createVerticalStrut(8));
+        qrPanel.add(qrDoneBtn, BorderLayout.SOUTH);
+        checkoutPanel.add(qrPanel);
 
         rightPanel.add(checkoutPanel, BorderLayout.SOUTH);
         add(rightPanel, BorderLayout.EAST);
@@ -253,90 +226,94 @@ public class NewSale extends JPanel {
 
     // Show receipt panel (for both cash and QR)
     private void showReceiptPanel() {
-        JPanel receiptPanel = new JPanel();
-        receiptPanel.setLayout(new BoxLayout(receiptPanel, BoxLayout.Y_AXIS));
-        receiptPanel.setBackground(Color.WHITE);
-        receiptPanel.setBorder(new EmptyBorder(24, 24, 24, 24));
-        receiptPanel.add(new JLabel("Receipt (Preview):"));
-        // Add receipt details here (for now, just a placeholder)
-        receiptPanel.add(new JLabel("Thank you for your purchase!"));
-        JOptionPane.showMessageDialog(this, receiptPanel, "Receipt", JOptionPane.PLAIN_MESSAGE);
-    }
+        // Build receipt text
+        StringBuilder sb = new StringBuilder();
+        sb.append("GIC goods\n");
+        sb.append("\n");
+        sb.append(String.format("%-3s %-20s %6s %8s %8s\n", "N", "Items", "Qty", "Price", "Total"));
+        sb.append("------------------------------------------------------------\n");
 
-    // Show QR dialog with QR image, Back, and Done
-    private void showQRDialog() {
-        JDialog qrDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Scan QR to Pay", Dialog.ModalityType.APPLICATION_MODAL);
-        qrDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        qrDialog.setSize(400, 600);
-        qrDialog.setLocationRelativeTo(this);
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.setBackground(new Color(247, 249, 251));
-
-        // Try to load the QR image using the same logic as the rest of the app
-        Image qrImg = main.com.pos.components.ui.UI.getImage("images/checkout.png");
-        JLabel qrLabel;
-        if (qrImg != null) {
-            qrLabel = new JLabel(new ImageIcon(qrImg.getScaledInstance(300, 300, Image.SCALE_SMOOTH)));
-        } else {
-            qrLabel = new JLabel("QR image not found. Please add 'checkout.png' to images folder.");
-            qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            qrLabel.setForeground(Color.RED);
-        }
-        qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(qrLabel, BorderLayout.CENTER);
-
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 16));
-        btnPanel.setOpaque(false);
-
-        JButton backBtn = new JButton("Back");
-        backBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        backBtn.setBackground(new Color(200, 200, 200));
-        backBtn.setForeground(Color.BLACK);
-        backBtn.setFocusPainted(false);
-        backBtn.setPreferredSize(new Dimension(120, 44));
-        backBtn.setMaximumSize(new Dimension(120, 44));
-        backBtn.setMinimumSize(new Dimension(120, 44));
-        backBtn.addActionListener(e -> qrDialog.dispose());
-        btnPanel.add(backBtn);
-
-        JButton doneBtn = new JButton("Done");
-        doneBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        doneBtn.setBackground(new Color(33, 150, 243));
-        doneBtn.setForeground(Color.WHITE);
-        doneBtn.setFocusPainted(false);
-        doneBtn.setPreferredSize(new Dimension(120, 44));
-        doneBtn.setMaximumSize(new Dimension(120, 44));
-        doneBtn.setMinimumSize(new Dimension(120, 44));
-        doneBtn.addActionListener(e -> {
-            if (cart.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please select at least one product before checking out.", "No Product Selected", JOptionPane.WARNING_MESSAGE);
-            } else if (!isCartStockAvailable()) {
-                // Stock validation failed
-            } else {
-                qrDialog.dispose();
-                handleCheckout("qr");
-            }
-        });
-        btnPanel.add(doneBtn);
-
-        panel.add(btnPanel, BorderLayout.SOUTH);
-
-        qrDialog.setContentPane(panel);
-        qrDialog.setVisible(true);
-    }
-
-    // Deduct stock for all products in cart and show receipt
-    private void handleCheckout(String method) {
-        ProductDAO productDAO = new ProductDAO();
+        double subtotal = 0.0;
+        int idx = 1;
         for (CartItem item : cart.values()) {
-            // Deduct stock by negative quantity
-            productDAO.updateStock(item.product.getProductId(), -item.qty);
+            String name = item.product.getName();
+            if (name.length() > 20) name = name.substring(0, 20);
+            double price = item.product.getPrice();
+            double lineTotal = price * item.qty;
+            subtotal += lineTotal;
+            sb.append(String.format("%-3d %-20s %6d %8.2f %8.2f\n", idx, name, item.qty, price, lineTotal));
+            idx++;
         }
-        cart.clear();
-        updateCartPanel();
-        showReceiptPanel();
+
+        sb.append("------------------------------------------------------------\n");
+        sb.append(String.format("%-36s %12.2f\n", "Subtotal:", subtotal));
+        sb.append("------------------------------------------------------------\n");
+        double tax = subtotal * 0.067; // 6.7%
+        sb.append(String.format("%-36s %12.2f\n", "6.7% tax", tax));
+        sb.append("------------------------------------------------------------\n");
+        double total = subtotal + tax;
+        sb.append(String.format("%-36s %12.2f\n", "Total", total));
+        sb.append("------------------------------------------------------------\n");
+        sb.append("Payment: Cash/Card\n");
+        sb.append("\n");
+        sb.append("**********************\n");
+        sb.append("GIC goods value your feedback!!!\n");
+        sb.append("Tell us what you think about our store today for a chance at a $50 gift card.\n");
+        sb.append("Visit www.Gicgoodfeedback.com\n");
+
+        String receiptText = sb.toString();
+
+        // Build Sale and SaleItem list and persist order (updates stock)
+        OrderService orderService = new OrderService();
+        Sale sale = new Sale();
+        // set to current user id if available otherwise fallback to admin (1)
+        if (this.currentUser != null) sale.setUserId(this.currentUser.getUserId());
+        else sale.setUserId(1);
+        sale.setSaleDate(new DateTime());
+        sale.setCustomerId(0);
+        sale.setTotal(total);
+        sale.setDiscount(0);
+        sale.setPaymentType("Cash");
+
+        java.util.List<SaleItem> saleItems = new ArrayList<>();
+        for (CartItem item : cart.values()) {
+            SaleItem si = new SaleItem(0, 0, item.product.getProductId(), item.qty, item.product.getPrice(), 0);
+            saleItems.add(si);
+        }
+
+        boolean orderCompleted = orderService.completeOrder(sale, saleItems);
+        if (!orderCompleted) {
+            String err = orderService.getLastError();
+            if (err == null || err.isEmpty()) err = "Failed to complete order. Stock not updated.";
+            JOptionPane.showMessageDialog(this, err, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Save receipt as PDF using PDFBox
+        java.nio.file.Path receiptsDir = java.nio.file.Paths.get("receipts");
+        try {
+            if (!java.nio.file.Files.exists(receiptsDir)) {
+                java.nio.file.Files.createDirectories(receiptsDir);
+            }
+            String fileName = "receipt_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date()) + ".pdf";
+            java.nio.file.Path filePath = receiptsDir.resolve(fileName);
+
+            // Try PDF if PDFBox available; otherwise save as plain text
+            try {
+                // If PDFBox is present on classpath, this block can be replaced with PDF creation.
+                // For now write a plain text receipt to keep the project dependency-free.
+                java.nio.file.Files.writeString(filePath.resolveSibling(fileName.replaceAll("\\.pdf$",".txt")), receiptText, java.nio.charset.StandardCharsets.UTF_8);
+                // clear cart after successful order and save
+                cart.clear();
+                updateCartPanel();
+                updateProductGrid();
+                JOptionPane.showMessageDialog(this, "Receipt saved: " + receiptsDir.resolve(fileName).toAbsolutePath().toString().replaceAll("\\.pdf$", ".txt"), "Saved", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Failed to save receipt: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Failed to create PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
 
@@ -635,25 +612,5 @@ public class NewSale extends JPanel {
             frame.setContentPane(new NewSale());
             frame.setVisible(true);
         });
-    }
-
-    // Check if all products in cart have enough stock
-    private boolean isCartStockAvailable() {
-        StringBuilder errorMsg = new StringBuilder();
-        boolean ok = true;
-        for (CartItem item : cart.values()) {
-            int available = item.product.getStockQuantity();
-            if (item.qty > available) {
-                ok = false;
-                errorMsg.append(String.format("%s: Only %d in stock, but %d in cart.\n", item.product.getName(), available, item.qty));
-            } else if (available <= 0) {
-                ok = false;
-                errorMsg.append(String.format("%s: Out of stock.\n", item.product.getName()));
-            }
-        }
-        if (!ok) {
-            JOptionPane.showMessageDialog(this, errorMsg.toString(), "Stock Not Available", JOptionPane.ERROR_MESSAGE);
-        }
-        return ok;
     }
 }
