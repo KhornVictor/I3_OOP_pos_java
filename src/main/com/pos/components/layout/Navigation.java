@@ -19,12 +19,11 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import main.com.pos.components.ui.UI;
-import main.com.pos.components.ui.UI.RoundedPanel;
 import main.com.pos.model.User;
+import main.com.pos.view.notification.notificationFrame;
 import main.com.pos.view.setting.SettingPanel;
 
 public class Navigation extends JPanel {
@@ -48,40 +47,40 @@ public class Navigation extends JPanel {
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         centerPanel.setOpaque(false);
 
-        JPanel searchPanel = new RoundedPanel(20, Color.WHITE, new Color(209, 213, 219), new Dimension(400, 40), BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        // JPanel searchPanel = new RoundedPanel(20, Color.WHITE, new Color(209, 213, 219), new Dimension(400, 40), BorderFactory.createEmptyBorder(8, 12, 8, 12));
 
-        // Search icon (emoji fallback until an image is provided)
-        JLabel searchIcon = UI.setInternetIconLabel("https://icons.iconarchive.com/icons/icons8/windows-8/512/Very-Basic-Search-icon.png", 14, 14);
-        searchIcon.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        searchIcon.setBorder(new EmptyBorder(0, 0, 0, 8));
-        searchPanel.add(searchIcon, BorderLayout.WEST);
+        // // Search icon (emoji fallback until an image is provided)
+        // JLabel searchIcon = UI.setIconLabel("images/navigation/search.png", 14, 14);
+        // searchIcon.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        // searchIcon.setBorder(new EmptyBorder(0, 0, 0, 8));
+        // searchPanel.add(searchIcon, BorderLayout.WEST);
 
-        // Search input
-        JTextField searchField = new JTextField();
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        searchField.setForeground(new Color(148, 163, 184));
-        searchField.setText("Search...");
-        searchField.setBorder(BorderFactory.createEmptyBorder());
-        searchField.setBackground(Color.WHITE);
-        searchField.addFocusListener(new java.awt.event.FocusAdapter() {
-            @Override
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                if (searchField.getText().equals("Search...")) {
-                    searchField.setText("");
-                    searchField.setForeground(new Color(30, 41, 59));
-                }
-            }
-            @Override
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                if (searchField.getText().isEmpty()) {
-                    searchField.setText("Search...");
-                    searchField.setForeground(new Color(148, 163, 184));
-                }
-            }
-        });
-        searchPanel.add(searchField, BorderLayout.CENTER);
+        // // Search input
+        // JTextField searchField = new JTextField();
+        // searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // searchField.setForeground(new Color(148, 163, 184));
+        // searchField.setText("Search...");
+        // searchField.setBorder(BorderFactory.createEmptyBorder());
+        // searchField.setBackground(Color.WHITE);
+        // searchField.addFocusListener(new java.awt.event.FocusAdapter() {
+        //     @Override
+        //     public void focusGained(java.awt.event.FocusEvent evt) {
+        //         if (searchField.getText().equals("Search...")) {
+        //             searchField.setText("");
+        //             searchField.setForeground(new Color(30, 41, 59));
+        //         }
+        //     }
+        //     @Override
+        //     public void focusLost(java.awt.event.FocusEvent evt) {
+        //         if (searchField.getText().isEmpty()) {
+        //             searchField.setText("Search...");
+        //             searchField.setForeground(new Color(148, 163, 184));
+        //         }
+        //     }
+        // });
+        // searchPanel.add(searchField, BorderLayout.CENTER);
 
-        centerPanel.add(searchPanel);
+        // centerPanel.add(searchPanel);
         add(centerPanel, BorderLayout.CENTER);
 
         // Right section - Notification and User profile
@@ -99,7 +98,7 @@ public class Navigation extends JPanel {
                 // Draw bell icon
                 g2.setColor(new Color(100, 116, 139));
                 g2.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                g2.drawImage(UI.internetImage("https://cdn-icons-png.flaticon.com/512/8310/8310386.png"), 0, 0, 30, 30, this);
+                g2.drawImage(UI.getImage("images/navigation/notification.png"), 0, 0, 30, 30, this);
                 
                 // Draw notification badge
                 g2.setColor(new Color(239, 68, 68));
@@ -108,14 +107,23 @@ public class Navigation extends JPanel {
                 // Draw badge number
                 g2.setColor(Color.WHITE);
                 g2.setFont(new Font("Segoe UI", Font.BOLD, 9));
-                g2.drawString("1", 26, 11);
+                int count = notificationFrame.getInstance().getCountMessage();
+                String countStr = count > 99 ? "99+" : String.valueOf(count);
+                g2.drawString(countStr, count > 9 ? 24 : 26, 11);
                 
                 g2.dispose();
             }
         };
+        notificationPanel.setCursor(new Cursor(HAND_CURSOR));
+        notificationPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+                notificationFrame.getInstance().notificationFrameInitialize();
+            }
+        });
         notificationPanel.setOpaque(false);
         notificationPanel.setPreferredSize(new Dimension(35, 30));
-        rightPanel.add(notificationPanel);
+        if (user.getRole().equals("admin")) rightPanel.add(notificationPanel);
 
         // User profile section
         JPanel userPanel = new JPanel();

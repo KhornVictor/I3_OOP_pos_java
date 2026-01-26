@@ -451,7 +451,7 @@ public class ReportPanel extends JPanel {
         reportPanel.setPreferredSize(new Dimension(650, 500));
 
         // Header
-        JLabel headerLabel = new JLabel("📊 Daily Sales Report");
+        JLabel headerLabel = new JLabel("Daily Sales Report");
         headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         headerLabel.setForeground(new Color(59, 130, 246));
         headerLabel.setHorizontalAlignment(SwingConstants.CENTER);

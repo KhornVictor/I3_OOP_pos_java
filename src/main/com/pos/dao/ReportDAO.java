@@ -720,8 +720,8 @@ public class ReportDAO {
             if (resultSet.next()) {
                 int todayCount = resultSet.getInt("TodayCount");
                 int yesterdayCount = resultSet.getInt("YesterdayCount");
-                if (yesterdayCount > 0) percentage = ((double)(todayCount - yesterdayCount) / yesterdayCount) * 100;
-                else if (todayCount > 0)  percentage = 100.0; // If there were no transactions yesterday but some today, it's a 100% increase
+                int totalCount = todayCount + yesterdayCount;
+                if (totalCount > 0) percentage = ((double) todayCount / totalCount) * 100;
             }
         } catch (SQLException error) { System.out.println(Color.RED + "❌ getPercentageTodayAndYesterday error: " + error.getMessage() + Color.RESET); }
         return percentage;

@@ -102,13 +102,13 @@ public class SideBar extends JPanel {
         gbc.gridy = 0;
 
         String[][] menuItems = {
-            {"https://cdn-icons-png.flaticon.com/512/5581/5581393.png", " Dashboard"},
-            {"https://cdn-icons-png.freepik.com/512/7835/7835563.png", " New Sale"},
-            {"https://images.emojiterra.com/google/noto-emoji/unicode-15/color/512px/1f4e6.png", " Products"},
-            {"https://images.emojiterra.com/google/android-12l/512px/1f465.png", " Users"},
-            {"https://cdn-icons-png.flaticon.com/512/1966/1966114.png", " Inventory"},
-            {"https://cdn-icons-png.flaticon.com/512/6005/6005505.png", " Reports"},
-            {"https://icons.iconarchive.com/icons/grafikartes/flat-retro-modern/512/settings-icon.png", " Settings"}
+            {"images/dashboard/icons/dashboard.png", " Dashboard"},
+            {"images/dashboard/icons/sales.png", " New Sale"},
+            {"images/dashboard/icons/products.png", " Products"},
+            {"images/dashboard/icons/customers.png", " Users"},
+            {"images/dashboard/icons/inventory.png", " Inventory"},
+            {"images/dashboard/icons/reports.png", " Reports"},
+            {"images/dashboard/icons/settings.png", " Settings"}
         };
 
         for (String[] item : menuItems) {
@@ -134,6 +134,7 @@ public class SideBar extends JPanel {
             menuBtn.addActionListener(e -> {
 
                 if (activButton != null) ((SidebarMenuButton) activButton).setActive(false);
+                
 
                 activButton = menuBtn;
                 menuBtn.setActive(true);
@@ -157,7 +158,6 @@ public class SideBar extends JPanel {
                     contentPanel.repaint();
                 }
                 else if (text.contains("new sale")) {
-                    System.out.println("new sale menu clicked");
                     navigation.setTitle("NewSale");
                     contentPanel.removeAll();
                     contentPanel.add(new NewSale(), BorderLayout.CENTER);
@@ -165,7 +165,6 @@ public class SideBar extends JPanel {
                     contentPanel.repaint();
                 }
                 else if (text.contains("reports")) {
-                    System.out.println("Reports menu clicked");
                     navigation.setTitle("Reports");
                     contentPanel.removeAll();
                     contentPanel.add(new ReportPanel(), BorderLayout.CENTER);
@@ -173,7 +172,6 @@ public class SideBar extends JPanel {
                     contentPanel.repaint();
                 }
                 else if (text.contains("users")) {
-                    System.out.println("Users menu clicked");
                     navigation.setTitle("Users");
                     contentPanel.removeAll();
                     contentPanel.add(new UserPanel(), BorderLayout.CENTER);
@@ -181,7 +179,6 @@ public class SideBar extends JPanel {
                     contentPanel.repaint();
                 }
                 else if (text.contains("inventory")){
-                    System.out.println("Inventory menu clicked");
                     navigation.setTitle("Inventory");
                     contentPanel.removeAll();
                     contentPanel.add(new InventoryDashboardPanel(), BorderLayout.CENTER);
@@ -191,7 +188,6 @@ public class SideBar extends JPanel {
                     contentPanel.repaint();
                 }
                 else if (text.contains("settings")) {
-                    System.out.println("Settings menu clicked");
                     navigation.setTitle("Settings");
                     contentPanel.removeAll();
                     contentPanel.add(new SettingPanel(user), BorderLayout.CENTER);
@@ -215,7 +211,7 @@ public class SideBar extends JPanel {
         footerPanel.setOpaque(false);
         footerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         SidebarMenuButton logoutButton = new SidebarMenuButton(
-            "https://cdn-icons-png.flaticon.com/512/8212/8212701.png", 
+            "images/dashboard/icons/logout.png", 
             new JLabel(" Logout"), 
             Color.black, Color.white,
             new Color(245, 38, 33),

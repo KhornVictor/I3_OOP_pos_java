@@ -85,7 +85,7 @@ public class UserPanel extends JPanel {
         left.add(statusBox);
 
         JComboBox<String> roleBox = createStyledComboBox(
-            new String[]{"All Roles", "Admin", "Staff", "Customer", "Cashier"}
+            new String[]{"All Roles", "Admin", "Cashier"}
         );
         roleBox.addActionListener(e -> {
             currentRoleFilter = roleBox.getSelectedItem().toString();

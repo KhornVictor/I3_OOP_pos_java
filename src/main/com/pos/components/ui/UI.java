@@ -308,7 +308,7 @@ public class UI extends JFrame {
 
 
         public SidebarMenuButton(String url, JLabel textLabel,Color fColor,Color fColored, Color normalBackgroundColor, Color hoverBackgroundColor, Color activeBackgroundColor, Color pressedBackgroundColor) {
-            this.iconLabel = UI.setInternetIconLabel(url, 24, 24);
+            this.iconLabel = UI.setIconLabel(url, 24, 24);
             this.textLabel = textLabel;
             this.normalBackgroundColor = normalBackgroundColor;
             this.hoverBackgroundColor = hoverBackgroundColor;

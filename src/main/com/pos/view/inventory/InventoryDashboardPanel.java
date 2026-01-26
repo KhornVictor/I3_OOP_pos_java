@@ -34,6 +34,7 @@ import javax.swing.table.TableRowSorter;
 import main.com.pos.components.ui.TableProduct;
 import main.com.pos.dao.ProductDAO;
 import main.com.pos.model.Product;
+import main.com.pos.util.Telegram;
 
 public class InventoryDashboardPanel extends JPanel {
     private JTable currentTable;
@@ -368,7 +369,7 @@ public class InventoryDashboardPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.decode("#3B82F6"));
+                g2.setColor(Color.decode("#268218"));
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
                 super.paintComponent(g);
             }
@@ -394,6 +395,7 @@ public class InventoryDashboardPanel extends JPanel {
                     JOptionPane.showMessageDialog(mainPanel, "Please enter a valid quantity.", "Invalid Input", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+                Telegram.telegramSend("Stock Added:\nProduct: " + selectedProduct.getName() + "\nQuantity: " + quantity + "\nNew Stock: " + (selectedProduct.getStockQuantity() + quantity) + "\nCost: " + ((selectedProduct.getPrice() * quantity) - (selectedProduct.getPrice() * quantity) * 0.1) + " $");
                 addStockToProduct(selectedProduct.getProductId(), quantity);
                 inputStock.setText("");
             }
@@ -404,7 +406,7 @@ public class InventoryDashboardPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.decode("#6B7280"));
+                g2.setColor(Color.decode("#ff0000"));
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
                 super.paintComponent(g);
             }
@@ -442,7 +444,7 @@ public class InventoryDashboardPanel extends JPanel {
                 if (selectedProduct != null && !inputStock.getText().isEmpty()) {
                     try {
                         int quantity = Integer.parseInt(inputStock.getText());
-                        priceValue.setText(String.valueOf((selectedProduct.getPrice() * quantity) + (selectedProduct.getPrice() * quantity) * 0.1) + " $");
+                        priceValue.setText(String.valueOf((selectedProduct.getPrice() * quantity) - (selectedProduct.getPrice() * quantity) * 0.1) + " $");
                     } catch (NumberFormatException ex) {
                         priceValue.setText("0 $");
                     }

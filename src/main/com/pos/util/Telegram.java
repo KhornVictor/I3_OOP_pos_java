@@ -51,4 +51,6 @@ public class Telegram {
             System.out.println(Color.RED + "🛑 An error occurred while sending the message." + Color.RESET);
         }
     }
+
+    
 }
